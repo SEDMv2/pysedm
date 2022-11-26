@@ -121,8 +121,8 @@ def get_dome(domefile, tracematch=None,  load_sep=False, **kwargs):
     if load_sep:
         dome.datadet = dome.data/np.sqrt(np.abs(dome.data))
         dome.sep_extract(thresh=50, on="datadet")
-        fig = dome.show()
-        dome.display_sepobjects(fig['ax'])
+        # fig = dome.show()
+        # dome.display_sepobjects(fig['ax'])
 
     if tracematch is not None:
         # = Tracematch that gonna help the background
