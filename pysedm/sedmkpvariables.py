@@ -73,12 +73,12 @@ _REFORIGIN = 69
 
 LINES= {"Hg": # IN VACUUM
             { 
-               np.mean([5771.210, 5792.276])   : {"ampl":13. ,"mu":201-_REFORIGIN,
+               np.mean([5771.210, 5792.276])   : {"ampl":30. ,"mu":201-_REFORIGIN,
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
                5462.268 : {"ampl":62.,"mu":187-_REFORIGIN},
-               4359.560   : {"ampl":50. ,"mu":112-_REFORIGIN},
-               4047.708 : {"ampl":10. ,"mu":82-_REFORIGIN}, 
+               4359.560   : {"ampl":50. ,"mu":147-_REFORIGIN},
+               4047.708 : {"ampl":10. ,"mu":115-_REFORIGIN},
               
                },
         "Cd":  # IN VACUUM
@@ -110,9 +110,9 @@ LINES= {"Hg": # IN VACUUM
                             "doublet":False}, # yes but really close
                             
                             
-               8821.83    : {"ampl": 11.,"mu":289-_REFORIGIN},
+               8821.83    : {"ampl": 11.,"mu":294-_REFORIGIN},
                    
-               np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":293-_REFORIGIN,
+               np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":298-_REFORIGIN,
                              "doublet":True , "info": "merge of lines 9854.71,9047.93"},
                9165.16    : {"ampl": 4.5,"mu":303-_REFORIGIN},
                
