@@ -76,16 +76,16 @@ LINES= {"Hg": # IN VACUUM
                np.mean([5771.210, 5792.276])   : {"ampl":30. ,"mu":201-_REFORIGIN,
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
-               5462.268 : {"ampl":62.,"mu":187-_REFORIGIN},
-               4359.560   : {"ampl":50. ,"mu":147-_REFORIGIN},
-               4047.708 : {"ampl":10. ,"mu":115-_REFORIGIN},
-              
+               5462.268 : {"ampl":65.,"mu":187-_REFORIGIN},
+               4359.560   : {"ampl":64. ,"mu":130-_REFORIGIN},
+               4047.708 : {"ampl":26,"mu":106-_REFORIGIN},
+                3650.153 : {"ampl":39, "mu":67-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
-              {4679.325 : {"ampl":14. ,"mu":143-_REFORIGIN}, 
-               4801.254 : {"ampl":40. ,"mu":153-_REFORIGIN},
-               5087.239 : {"ampl":60. ,"mu":169-_REFORIGIN},
-               6440.249 : {"ampl":19. ,"mu":227-_REFORIGIN}, 
+              {4679.325 : {"ampl":25. ,"mu":160-_REFORIGIN},
+               4801.254 : {"ampl":60. ,"mu":170-_REFORIGIN},
+               5087.239 : {"ampl":40. ,"mu":184-_REFORIGIN},
+               6440.249 : {"ampl":25. ,"mu":233-_REFORIGIN},
                # - Cd and Xe seems to have the same lines
                # Almost same wavelength but diffent enough to save the code
                8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
@@ -114,10 +114,10 @@ LINES= {"Hg": # IN VACUUM
                    
                np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":298-_REFORIGIN,
                              "doublet":True , "info": "merge of lines 9854.71,9047.93"},
-               9165.16    : {"ampl": 4.5,"mu":303-_REFORIGIN},
+               9165.16    : {"ampl": 4.5,"mu":308-_REFORIGIN},
                
                # small lines but isolated
-               7644.12    : {"ampl": 1.,"mu":264-_REFORIGIN},
+               # 7644.12    : {"ampl": 1.,"mu":264-_REFORIGIN},
                
                #9425.    : {"ampl": 2.,"mu":309-_REFORIGIN,
                #                "doublet":True , "info": "merge of lines 9400 and 9450"},
