@@ -5,8 +5,8 @@ import numpy as np
 
 # --- CCD
 SEDM_CCD_SIZE = [2048, 2048]
-DOME_TRACEBOUNDS = [70,200]
-TRACE_DISPERSION = 0.5 #1.2*2 # PSF (sigma assuming gaussian) of the traces on the CCD.
+DOME_TRACEBOUNDS = [70,230]
+TRACE_DISPERSION = 1.0 #1.2*2 # PSF (sigma assuming gaussian) of the traces on the CCD.
 
 SEDM_INVERT = False #  Shall the x and y axis extracted in the hexagrid be inverted ?
 SEDM_ROT    = 103 # SEDM alignment to have north up
@@ -17,7 +17,7 @@ SEDM_LBDA = np.linspace(3700, 9300, 220)
 LBDA_PIXEL_CUT = 3
 
 DEFAULT_REFLBDA = 6000 # In Angstrom
-IFU_SCALE_UNIT  = 0.75
+IFU_SCALE_UNIT  = 0.72
 
 # ----- WCS
 SEDM_ASTROM_PARAM  = [ 7.28968990e-01,  6.89009309e-02, -6.57804812e-03, -7.94252856e-01,
@@ -77,15 +77,15 @@ LINES= {"Hg": # IN VACUUM
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
                5462.268 : {"ampl":65.,"mu":187-_REFORIGIN},
-               4359.560   : {"ampl":64. ,"mu":130-_REFORIGIN},
-               4047.708 : {"ampl":26,"mu":106-_REFORIGIN},
-                3650.153 : {"ampl":39, "mu":67-_REFORIGIN},
+               4359.560   : {"ampl":55. ,"mu":127-_REFORIGIN},
+               # 4047.708 : {"ampl":26,"mu":106-_REFORIGIN},
+                # 3650.153 : {"ampl":39, "mu":67-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
-              {4679.325 : {"ampl":25. ,"mu":160-_REFORIGIN},
+              {4679.325 : {"ampl":25. ,"mu":163-_REFORIGIN},
                4801.254 : {"ampl":60. ,"mu":170-_REFORIGIN},
-               5087.239 : {"ampl":40. ,"mu":184-_REFORIGIN},
-               6440.249 : {"ampl":25. ,"mu":233-_REFORIGIN},
+               5087.239 : {"ampl":40. ,"mu":185-_REFORIGIN},
+               6440.249 : {"ampl":25. ,"mu":232-_REFORIGIN},
                # - Cd and Xe seems to have the same lines
                # Almost same wavelength but diffent enough to save the code
                8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
@@ -114,7 +114,7 @@ LINES= {"Hg": # IN VACUUM
                    
                np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":298-_REFORIGIN,
                              "doublet":True , "info": "merge of lines 9854.71,9047.93"},
-               9165.16    : {"ampl": 4.5,"mu":308-_REFORIGIN},
+               9165.16    : {"ampl": 4.5,"mu":303-_REFORIGIN},
                
                # small lines but isolated
                # 7644.12    : {"ampl": 1.,"mu":264-_REFORIGIN},
