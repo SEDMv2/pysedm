@@ -1251,7 +1251,7 @@ class VirtualArcSpectrum( BaseObject ):
         this_mu_err = self._MU_ERR[self.arcname]
         for i,l in enumerate(self.usedlines):
             self._normguesses["ampl%d_guess"%i]      = self.arclines[l]["ampl"]
-            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.2, self.arclines[l]["ampl"]*3]
+            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.6, self.arclines[l]["ampl"]*3]
             
             self._normguesses["mu%d_guess"%i]        = self.arclines[l]["mu"]+lines_shift
             self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-this_mu_err,
