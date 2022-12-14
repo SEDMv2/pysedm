@@ -266,11 +266,12 @@ def build_backgrounds(date, client,
 #  Wavelength Solution     #
 #                          #
 ############################
-def build_wavesolution(night, client,
-                       verbose=False, ntest=None, idxrange=None,
-                       wavedegree=5, contdegree=3, 
-                       lamps=["Hg","Cd","Xe"], savefig=True,
-                       xybounds=None, rebuild=False):
+
+def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
+                       use_fine_tuned_traces=False,
+                       wavedegree=5, contdegree=1, show_progress=False,
+                       lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=False,
+                       xybounds=None, rebuild=True):
     """ Create the wavelength solution for the given night.
     The core of the solution fitting is made in pysedm.wavesolution.
 
