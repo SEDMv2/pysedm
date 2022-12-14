@@ -214,7 +214,7 @@ def build_backgrounds(date, smoothing=[0,5], start=2, jump=10,
 ############################
 def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
                        use_fine_tuned_traces=False,
-                       wavedegree=5, contdegree=3, show_progress=False,
+                       wavedegree=5, contdegree=1, show_progress=False,
                        lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=False,
                        xybounds=None, rebuild=True):
     """ Create the wavelength solution for the given night.

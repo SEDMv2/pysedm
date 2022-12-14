@@ -1016,15 +1016,20 @@ class VirtualArcSpectrum( BaseObject ):
     def get_line_shift(self):
         """ Shift of the central line value based on the considered spaxel """
         if self.arcname in ["Hg"]:
-            wavemax = np.max(self.lbda[self.get_arg_maxflux(2)])
-        elif self.arcname in ["Xe"]:
             wavemax = np.min(self.lbda[self.get_arg_maxflux(2)])
+            wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
+        elif self.arcname in ["Xe"]:
+            wavemax = np.max(self.lbda[self.get_arg_maxflux(5)])
+            wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
+            #wavemax_expected = np.asarray([self.arclines[l]["mu"] for l in self.expected_brightesline])[[0,2,4]]
         else:
-            wavemax = self.lbda[self.get_arg_maxflux(1)]
-          
-          
-        wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
-        return wavemax-wavemax_expected
+            wavemax = np.min(self.lbda[self.get_arg_maxflux(3)])
+            wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
+
+        #print(wavemax)
+        #print(wavemax_expected)
+        #print('----')
+        return np.mean(np.atleast_1d(wavemax-wavemax_expected))
     
     def get_arg_maxflux(self, nbest, mask=None, order=3, **kwargs):
         """ The argument of the maximum values. 
@@ -1159,10 +1164,10 @@ class VirtualArcSpectrum( BaseObject ):
         self._normguesses = {}
         if line_shift is None:
             lines_shift = self.get_line_shift()
-            
+
         for i,l in enumerate(self.usedlines):
             self._normguesses["ampl%d_guess"%i]      = self.arclines[l]["ampl"]
-            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.6, self.arclines[l]["ampl"]*3]
+            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.5, self.arclines[l]["ampl"]*3]
             
             self._normguesses["mu%d_guess"%i]        = self.arclines[l]["mu"]+lines_shift
             self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-2, self._normguesses["mu%d_guess"%i]+2]
@@ -1311,6 +1316,9 @@ class VirtualArcSpectrum( BaseObject ):
     def expected_brightesline(self):
         """ lines that has the greatest amplitude in the LINES global variable """
         l, amp = np.asarray([[l,v["ampl"]] for l,v in self.arclines.items()]).T
+        # if self.arcname == 'Xe':
+        #     return l
+        # else:
         return l[np.argmax(amp)]
 
     # - SpaxelWaveSolution
