@@ -1023,7 +1023,7 @@ class VirtualArcSpectrum( BaseObject ):
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
             #wavemax_expected = np.asarray([self.arclines[l]["mu"] for l in self.expected_brightesline])[[0,2,4]]
         else:
-            wavemax = np.min(self.lbda[self.get_arg_maxflux(2)])
+            wavemax = self.lbda[self.get_arg_maxflux(3)][1]
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
 
         #print(wavemax)
@@ -1167,7 +1167,7 @@ class VirtualArcSpectrum( BaseObject ):
 
         for i,l in enumerate(self.usedlines):
             self._normguesses["ampl%d_guess"%i]      = self.arclines[l]["ampl"]
-            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.3, self.arclines[l]["ampl"]*3]
+            self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.7, self.arclines[l]["ampl"]*3]
             
             self._normguesses["mu%d_guess"%i]        = self.arclines[l]["mu"]+lines_shift
             self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-2, self._normguesses["mu%d_guess"%i]+2]

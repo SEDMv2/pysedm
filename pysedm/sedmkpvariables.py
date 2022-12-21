@@ -73,18 +73,18 @@ _REFORIGIN = 69
 
 LINES= {"Hg": # IN VACUUM
             { 
-               np.mean([5771.210, 5792.276])   : {"ampl":30. ,"mu":199-_REFORIGIN,
+               np.mean([5771.210, 5792.276])   : {"ampl":30. ,"mu":201-_REFORIGIN,
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
-               5462.268 : {"ampl":55.,"mu":187-_REFORIGIN},
+               5462.268 : {"ampl":55.,"mu":189-_REFORIGIN},
                4359.560   : {"ampl":65. ,"mu":133-_REFORIGIN},
                 4047.708 : {"ampl":26,"mu":106-_REFORIGIN},
                 # 3650.153 : {"ampl":39, "mu":67-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
               {4679.325 : {"ampl":25. ,"mu":163-_REFORIGIN},
-               4801.254 : {"ampl":60. ,"mu":170-_REFORIGIN},
-               5087.239 : {"ampl":40. ,"mu":185-_REFORIGIN},
+               4801.254 : {"ampl":40. ,"mu":170-_REFORIGIN},
+               5087.239 : {"ampl":60. ,"mu":185-_REFORIGIN},
                6440.249 : {"ampl":25. ,"mu":232-_REFORIGIN},
                # - Cd and Xe seems to have the same lines
                # Almost same wavelength but diffent enough to save the code
