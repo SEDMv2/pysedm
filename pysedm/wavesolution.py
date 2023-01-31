@@ -1091,11 +1091,11 @@ class VirtualArcSpectrum( BaseObject ):
             wavemax = np.min(self.lbda[self.get_arg_maxflux(2)])
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
         elif self.arcname in ["Xe"]:
-            wavemax = np.max(self.lbda[self.get_arg_maxflux(5)])
+            wavemax = np.max(self.lbda[self.get_arg_maxflux(1)])
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
             #wavemax_expected = np.asarray([self.arclines[l]["mu"] for l in self.expected_brightesline])[[0,2,4]]
         else:
-            wavemax = self.lbda[self.get_arg_maxflux(3)][1]
+            wavemax = np.max(self.lbda[self.get_arg_maxflux(2)])
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
 
         #print(wavemax)
