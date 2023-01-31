@@ -1088,7 +1088,7 @@ class VirtualArcSpectrum( BaseObject ):
     def get_lines_shift(self):
         """ Shift of the central line value based on the considered spaxel """
         if self.arcname in ["Hg"]:
-            wavemax = np.min(self.lbda[self.get_arg_maxflux(2)])
+            wavemax = np.max(self.lbda[self.get_arg_maxflux(2)])
             wavemax_expected = self.arclines[self.expected_brightesline]["mu"]
         elif self.arcname in ["Xe"]:
             wavemax = np.max(self.lbda[self.get_arg_maxflux(1)])
