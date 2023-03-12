@@ -340,6 +340,7 @@ def build_sedmcube(ccd, date, lbda=None, flatfield=None,
     if flatfielded and flatfield is None:
         flatfield = io.load_nightly_flat(date)
 
+    print(lbda)
     # - Build the Cube
     cube = ccd.extract_cube(wavesolution, lbda, hexagrid=hexagrid, show_progress=False,
                             pixel_shift=pixel_shift)
