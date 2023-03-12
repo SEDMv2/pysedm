@@ -675,7 +675,7 @@ class CCD( BaseCCD ):
 
 
         spaxel_map = {i:c for i,c in zip(used_indexes, spaxels_position)}
-
+        print(lbda)
         cube.create(cubeflux.T,lbda=lbda, spaxel_mapping=spaxel_map, variance=cubevar.T)
         cube.set_spaxel_vertices(np.dot(hexagrid.grid_rotmatrix,SEDMSPAXELS.T).T)
         return cube
