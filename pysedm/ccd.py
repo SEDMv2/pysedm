@@ -684,6 +684,7 @@ class CCD( BaseCCD ):
             cubevar = cubevar.T #
             
         cube.create(cubeflux.T,lbda=lbda, spaxel_mapping=spaxel_map, variance=cubevar)
+        print(lbda)
         cube.set_spaxel_vertices(np.dot(hexagrid.grid_rotmatrix,SEDMSPAXELS.T).T)
         cube._lbda_to_header_(cube.lbda) # force dump lbda to the header.
         return cube
