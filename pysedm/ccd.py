@@ -651,6 +651,7 @@ class CCD( BaseCCD ):
         #        flux_ = np.ones(len(lbda) )*np.nan
         #        variance_ = np.ones(len(lbda) )*np.inf
 
+
             cubeflux_[i_] = flux_
             if cubevar_ is not None:
                 cubevar_[i_] = variance_
