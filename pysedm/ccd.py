@@ -638,14 +638,14 @@ class CCD( BaseCCD ):
         # MultiProcess #
         # ------------ #
         def _build_ith_flux_(i_):
-            try:
-                lbda_, flux_, variance_ = self.extract_spectrum(i_, wavesolution, lbda=lbda,
-                                                                get_spectrum=False,
-                                                                pixel_shift=pixel_shift)
-            except:
-                warnings.warn("FAILING EXTRACT_SPECTRUM for trace index %d: most likely wavesolution failed for this trace. *NaN Spectrum set*"%i_)
-                flux_ = np.ones(len(lbda) )*np.NaN
-                variance_ = np.ones(len(lbda) )*np.inf
+            # try:
+            lbda_, flux_, variance_ = self.extract_spectrum(i_, wavesolution, lbda=lbda,
+                                                            get_spectrum=False,
+                                                            pixel_shift=pixel_shift)
+            # except:
+            #     warnings.warn("FAILING EXTRACT_SPECTRUM for trace index %d: most likely wavesolution failed for this trace. *NaN Spectrum set*"%i_)
+            #     flux_ = np.ones(len(lbda) )*np.NaN
+            #     variance_ = np.ones(len(lbda) )*np.inf
 
             cubeflux_[i_] = flux_
             if cubevar_ is not None:
