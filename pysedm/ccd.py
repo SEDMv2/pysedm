@@ -544,10 +544,10 @@ class CCD( BaseCCD ):
         if lbda is not None:
             from scipy.interpolate  import interp1d
             pxl_wanted = wavesolution.lbda_to_pixels(lbda, traceindex) + pixel_shift
-            print(traceindex)
-            print(np.min(pxl_wanted), np.max(pxl_wanted))
-            print(np.min(pixs[mask]),np.max(pixs[mask]))
-            print('----------------------------')
+            # print(traceindex)
+            # print(np.min(pxl_wanted), np.max(pxl_wanted))
+            # print(np.min(pixs[mask]),np.max(pixs[mask]))
+            # print('----------------------------')
             flux = interp1d(pixs[mask], f[mask], kind=kind)(pxl_wanted)
             var  = interp1d(pixs[mask], v[mask], kind=kind)(pxl_wanted) if v is not None else v
         else:
