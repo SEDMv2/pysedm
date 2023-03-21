@@ -456,7 +456,7 @@ class Flexure( BaseObject ):
     # -------- #
     #  LOADER  #
     # -------- #
-    def load_sodium_spec(self, nspaxels=17, averaging=37, use_faintest=True):
+    def load_sodium_spec(self, nspaxels=20, averaging=30, use_faintest=True):
         """ """
         if use_faintest:
             index_to_fit = np.asarray(self.cube.get_faintest_spaxels(nspaxels*averaging))
