@@ -13,7 +13,7 @@ SEDM_ROT    = 103 # SEDM alignment to have north up
 SEDM_MLA_RADIUS = 25
 
 # --- LBDA
-SEDM_LBDA = np.linspace(3500, 9300, 230)
+SEDM_LBDA = np.linspace(3700, 9300, 220)
 LBDA_PIXEL_CUT = 3
 
 DEFAULT_REFLBDA = 6000 # In Angstrom
