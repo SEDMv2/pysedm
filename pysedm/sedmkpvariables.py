@@ -6,7 +6,7 @@ import numpy as np
 # --- CCD
 SEDM_CCD_SIZE = [2048, 2048]
 DOME_TRACEBOUNDS = [70,230]
-TRACE_DISPERSION = 0.5 #1.2*2 # PSF (sigma assuming gaussian) of the traces on the CCD.
+TRACE_DISPERSION = 1.2*2 # PSF (sigma assuming gaussian) of the traces on the CCD.
 
 SEDM_INVERT = False #  Shall the x and y axis extracted in the hexagrid be inverted ?
 SEDM_ROT    = 103 # SEDM alignment to have north up
