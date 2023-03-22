@@ -1405,8 +1405,8 @@ class SEDMExtractStar( BaseObject ):
             if np.any([savefile.endswith(k) for k in ["pdf", "png","jpeg","svn"]]):
                 fig.savefig(savefile)
             else:
-                fig.savefig(savefile+".pdf", type="pdf")
-                fig.savefig(savefile+".png", type="png")
+                fig.savefig(savefile+".pdf")
+                fig.savefig(savefile+".png")
 
         return fig
 
