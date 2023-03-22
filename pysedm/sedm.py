@@ -600,7 +600,7 @@ def flux_calibrate_sedm(spec_, fluxcalfile=None, nofluxcal=False):
         # Which Flux calibration file ?
         if fluxcalfile is None:
             print("INFO: default nearest fluxcal file used")
-            fluxcalfile = io.fetch_nearest_fluxcal(mjd=spec.header.get("MJD_OBS"))
+            fluxcalfile = io.fetch_nearest_fluxcal(mjd=spec.header.get("MJD-OBS"))
         else:
             print("INFO: given fluxcal used.")
 
