@@ -1865,8 +1865,8 @@ class SEDMCube( Cube ):
         from astropy.time import Time
         from astropy.coordinates import SkyCoord
         import astropy.units as u
-        telpa = Observer.parallactic_angle(Time(self.header['DATE'],format='isot'),
-                                   SkyCoord(ra=self.header['RAD'],dec=self.header['DECD'],unit=(u.deg)))
+        telpa = Observer.parallactic_angle(time=Time(self.header['DATE'],format='isot'),
+                                   target=SkyCoord(ra=self.header['RAD'],dec=self.header['DECD'],unit=(u.deg)))
         adr_prop = {**dict(pressure=pressure,
                                        lbdaref=lbdaref,
                                        temperature=self.header["TEMPTURE"],
