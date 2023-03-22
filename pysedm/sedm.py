@@ -1954,12 +1954,18 @@ class SEDMCube( Cube ):
         -------
         Void (loads the self.adr)
         """
+        from astroplan import Observer
+        from astropy.time import Time
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+        telpa = Observer.parallactic_angle(Time(self.header['DATE'],format='isot'),
+                                   SkyCoord(ra=self.header['RAD'],dec=self.header['DECD'],unit=(u.deg)))
         adr_prop = {**dict(pressure=pressure,
                                        lbdaref=lbdaref,
-                                       temperature=self.header["IN_AIR"],
-                                       relathumidity=self.header["IN_HUM"],
+                                       temperature=self.header["TEMPTURE"],
+                                       relathumidity=self.header["HUMIDITY"],
                                        airmass=self.header.get('AIRMASS', 1.1),
-                                       parangle=self.header['TEL_PA']),
+                                       parangle=telpa.deg),
                     **kwargs}
         return super(SEDMCube, self).load_adr(**adr_prop)
 
