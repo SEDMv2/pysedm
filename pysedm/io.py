@@ -235,19 +235,19 @@ def parse_filename(filename):
     """ """
     filename = filename.split(".")[0]
     if filename.startswith("crr"):
-        crr, b, ifudate, hh, mm, ss, *targetname  = filename.split("_")
+        crr, b, ifu, date, hms, *targetname  = filename.split("_")
     else:
-        _, crr, b, ifudate, hh, mm, ss, *targetname = filename.split("_")
+        _, crr, b, ifu, date, hms, *targetname = filename.split("_")
 
     if len(targetname)==0:
         targetname = None
     else:
-        targetname = ("-".join(targetname).replace(" ","")).split(".")[0]
+        targetname = targetname[0]#("-".join(targetname).replace(" ","")).split(".")[0]
         
-    date = ifudate.replace("ifu","")
-    mjd = Time(f"{date[:4]}-{date[4:6]}-{date[6:]}"+" "+f"{hh}:{mm}:{ss}", format="iso").mjd
+    # date = ifudate.replace("ifu","")
+    mjd = Time(f"{date[:4]}-{date[4:6]}-{date[6:]}"+" "+f"{hms[0:2]}:{hms[2:4]}:{hms[4:]}", format="iso").mjd
     return {"date":date,
-            "sedmid":f"{ifudate}_{hh}_{mm}_{ss}",
+            "sedmid":f"{ifu}_{date}_{hms}",
            "mjd":mjd, 
            "name":targetname}
 
