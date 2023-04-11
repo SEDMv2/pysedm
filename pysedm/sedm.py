@@ -58,7 +58,7 @@ INDEX_CCD_CONTOURS = [[20, 300], [300,40],
                      ]
 
 from shapely import geometry
-MLA_CIRCLE = geometry.Point(980,1020).buffer(700)
+MLA_CIRCLE = geometry.Point(1020,1020).buffer(750)
 MLA_GRID   = geometry.Polygon([[40,40],[40,2000], [2000,2000], [2000,40]])
 INDEX_CCD_CONTOURS = MLA_CIRCLE.intersection(MLA_GRID)
 
