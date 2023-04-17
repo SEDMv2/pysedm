@@ -125,7 +125,7 @@ def get_night_files(date, kind, target=None, extention=".fits"):
     # - Parsing the files
     return [path+f for f in os.listdir(get_datapath(date))
                if re.search(r'%s'%regex, f) and
-                 (target is None or re.search(r'%s'%target, f)) and
+                 (target is None or re.search(r'%s'%target.replace('+','\+'), f)) and
                  (extention is None or f.endswith(extention))]
 
 def get_cleaned_sedmcube(filename):
