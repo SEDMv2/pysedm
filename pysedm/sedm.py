@@ -90,34 +90,34 @@ MLA_ROTMATRIX   = np.asarray([[ np.cos(MLA_ROTATION_RAD),-np.sin(MLA_ROTATION_RA
 
 def get_sedm_astrom_param(cube_date=None):
     """ """
-    if cube_date is None:
-        return SEDM_ASTROM_PARAM
-
-
-    _sedm_version_ = get_sedm_version(cube_date)
-    # Old Rainbow CCD
-    if _sedm_version_ == "v1":
-        return SEDM_ASTROM_PARAM
-    elif _sedm_version_ == "v2":
-        return SEDM_ASTROM_PARAM_since_20180928
-    elif  _sedm_version_ == "v3":
-        return SEDM_ASTROM_PARAM_since_20190201
-    else:
-        return SEDM_ASTROM_PARAM_since_20190417
+    # if cube_date is None:
+    #     return SEDM_ASTROM_PARAM
+    #
+    #
+    # _sedm_version_ = get_sedm_version(cube_date)
+    # # Old Rainbow CCD
+    # if _sedm_version_ == "v1":
+    #     return SEDM_ASTROM_PARAM
+    # elif _sedm_version_ == "v2":
+    #     return SEDM_ASTROM_PARAM_since_20180928
+    # elif  _sedm_version_ == "v3":
+    #     return SEDM_ASTROM_PARAM_since_20190201
+    # else:
+    return SEDM_ASTROM_PARAM_since_20190417
 
 def get_sedm_version(cube_date):
     """ """
 
-    if cube_date is None:
-        return "v1"
-
-    from astropy.time import Time
-    if Time(cube_date) < Time("2018-09-27"):
-        return "v1"
-    if Time(cube_date) < Time("2019-01-30"):
-        return "v2"
-    if Time(cube_date) < Time("2019-04-17"):
-        return "v3"
+    # if cube_date is None:
+    #     return "v1"
+    #
+    # from astropy.time import Time
+    # if Time(cube_date) < Time("2018-09-27"):
+    #     return "v1"
+    # if Time(cube_date) < Time("2019-01-30"):
+    #     return "v2"
+    # if Time(cube_date) < Time("2019-04-17"):
+    #     return "v3"
 
     return "v4"
 

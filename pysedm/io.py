@@ -207,7 +207,7 @@ def fetch_nearest_fluxcal(date=None, file=None, mjd=None, kind="spec.fluxcal"):
 
 def filename_to_id(filename):
     """ """
-    return filename.split("/")[-1].split( header_to_date( getheader(filename) ))[-1][1:9]
+    return filename.split("/")[-1].split( header_to_date( getheader(filename) ))[-1][1:7]
 
 def header_to_date( header, sep=""):
     """ returns the datetiume YYYYMMDD associated with the 'JD' from the header """
@@ -235,9 +235,9 @@ def filename_to_guider(filename, astrom=True, extinction=".fits", nomd5=True):
     """ """
     fileinfo = parse_filename(filename)
     dirname = os.path.dirname(filename)
-    key = "astrom" if astrom else "guider"
+    key = "point" if astrom else "g_"
     return [os.path.join(dirname,l) for l in os.listdir( get_datapath(fileinfo["date"]))
-                if fileinfo["sedmid"] in l and key in l and (l.endswith(('.fits', '.gz')) if nomd5 else l) ] 
+                if fileinfo["sedmid"] in l and key in l and (l.endswith(('.fits', '.fz')) if nomd5 else l) ]
 
     
 def parse_filename(filename):
