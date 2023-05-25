@@ -25,8 +25,8 @@ from . import io
 from . import sedm
 
 
-SEDM_SPAXEL_ARCSEC = 0.75
-SEDM_LEFT_ROTATION = 2.5 * np.pi/180
+SEDM_SPAXEL_ARCSEC = 0.72
+SEDM_LEFT_ROTATION = 2.5 #* np.pi/180
 
 
 # ======================= #
@@ -404,95 +404,90 @@ class Astrometry():
     def _load_parameters_(self, date):
         """ """
         self.date = date
-        scale = 0.55
-        rotation = 1
-        position = np.nan, np.nan
+        scale = SEDM_SPAXEL_ARCSEC
+        rotation = SEDM_LEFT_ROTATION
+        position = 474, 537
 
-        #if Time(date) >= Time("2024-10-12"): # TO BE CHECKED
-        #    position = 1050.5, 968.5
-        #    scale = 0.55
-        #    rotation = 1
-        if Time(date) >= Time("2020-10-04"):
-            position = 1039.5, 968.5
-            scale = 0.55
-            rotation = 1
-            
-        elif Time(date) >= Time("2020-10-03"):
-            position = 1019.0, 945.0
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) >= Time("2020-08-28"):
-            position = 1027.5, 950.5
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) >= Time("2020-07-10"):
-            position = 1023.5, 958.5
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-09-06"):
-            position = 1026.5, 976
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-06-17"):
-            position = 1026.5, 975.3
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-05-24"):
-            position = 1029.5, 975.3
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-05-14"):
-            position = 1026.5, 975.3
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-05-13"):
-            print("WARNING: ROTATION.")
-            print("CONTACT TO MICKAEL IF YOU NEED DATA FOR THIS DATE.")
-            position = 1033.5, 975.3
-            scale = 0.55
-            rotation = 1
-
-        elif Time(date) > Time("2019-04-23"):
-            position = 1027, 978
-            scale = 0.55
-            rotation = 2
-
-        elif Time(date) > Time("2019-04-18"):
-            position = 1022, 1025
-            scale = 0.55
-            rotation = 2
-
-        elif Time(date) > Time("2019-02-28"):
-            position = 1017, 1015
-            scale = 0.55
-            rotation = 2
-
-        elif Time(date) > Time("2019-01-05"):
-            position = 1033, 1017
-            scale = 0.55
-            rotation = 2
-
-        elif Time(date) > Time("2018-10-17"):
-            position = 1016.5, 1015.5
-            scale = 0.55
-            rotation = 2
-
-        elif Time(date) > Time("2018-09-26"):
-            position = 1019.5, 1014.5
-            scale = 0.55
-            rotation = 2
-
-        else:
-            position = 1027.5, 1016.0
-            scale = 0.55
-            rotation = 2
+        # if Time(date) >= Time("2020-10-04"):
+        #     position = 1039.5, 968.5
+        #     scale = 0.55
+        #     rotation = 1
+        # elif Time(date) >= Time("2020-10-03"):
+        #     position = 1019.0, 945.0
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) >= Time("2020-08-28"):
+        #     position = 1027.5, 950.5
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) >= Time("2020-07-10"):
+        #     position = 1023.5, 958.5
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-09-06"):
+        #     position = 1026.5, 976
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-06-17"):
+        #     position = 1026.5, 975.3
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-05-24"):
+        #     position = 1029.5, 975.3
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-05-14"):
+        #     position = 1026.5, 975.3
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-05-13"):
+        #     print("WARNING: ROTATION.")
+        #     print("CONTACT TO MICKAEL IF YOU NEED DATA FOR THIS DATE.")
+        #     position = 1033.5, 975.3
+        #     scale = 0.55
+        #     rotation = 1
+        #
+        # elif Time(date) > Time("2019-04-23"):
+        #     position = 1027, 978
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # elif Time(date) > Time("2019-04-18"):
+        #     position = 1022, 1025
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # elif Time(date) > Time("2019-02-28"):
+        #     position = 1017, 1015
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # elif Time(date) > Time("2019-01-05"):
+        #     position = 1033, 1017
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # elif Time(date) > Time("2018-10-17"):
+        #     position = 1016.5, 1015.5
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # elif Time(date) > Time("2018-09-26"):
+        #     position = 1019.5, 1014.5
+        #     scale = 0.55
+        #     rotation = 2
+        #
+        # else:
+        #     position = 1027.5, 1016.0
+        #     scale = 0.55
+        #     rotation = 2
 
         self.parameters = {"position": position,
                            "scale": scale,
