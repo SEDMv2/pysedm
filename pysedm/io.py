@@ -260,7 +260,7 @@ def filename_to_guider(filename, astrom=True, extinction=".fits", nomd5=True):
     fileinfo = parse_filename(filename)
     dirname = os.path.dirname(filename)
     key = "point_" if astrom else "g_"
-    pointfiles = glob.glob(f'{REDUXPATH}/phot/{fileinfo["date"]}/{key}*{fileinfo["date"]}*{fileinfo["targetname"]}.fits')
+    pointfiles = glob(f'{REDUXPATH}/phot/{fileinfo["date"]}/{key}*{fileinfo["date"]}*{fileinfo["targetname"]}.fits')
     last_pointfile = None
     for pf in pointfiles:
         date,hms = pf.split('_')[1:3]
