@@ -259,9 +259,20 @@ def filename_to_guider(filename, astrom=True, extinction=".fits", nomd5=True):
     """ """
     fileinfo = parse_filename(filename)
     dirname = os.path.dirname(filename)
-    key = "point" if astrom else "g_"
-    return [os.path.join(dirname,l) for l in os.listdir( get_datapath(fileinfo["date"]))
-                if fileinfo["sedmid"] in l and key in l and (l.endswith(('.fits', '.fz')) if nomd5 else l) ]
+    key = "point_" if astrom else "g_"
+    pointfiles = glob.glob(f'{REDUXPATH}/phot/{fileinfo["date"]}/{key}*{fileinfo["date"]}*{fileinfo["targetname"]}.fits')
+    last_pointfile = None
+    for pf in pointfiles:
+        date,hms = pf.split('_')[1:3]
+        mjd = Time(f"{date[:4]}-{date[4:6]}-{date[6:]}" + " " + f"{hms[0:2]}:{hms[2:4]}:{hms[4:]}", format="iso").mjd
+        if fileinfo["mjd"] < mjd:
+            break
+        else:
+            last_pointfile = pf
+            continue
+    return [last_pointfile]
+    # return [os.path.join(dirname,l) for l in os.listdir( get_datapath(fileinfo["date"]))
+    #             if fileinfo["sedmid"] in l and key in l and (l.endswith(('.fits', '.fz')) if nomd5 else l) ]
 
     
 def parse_filename(filename):
