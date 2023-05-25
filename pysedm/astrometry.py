@@ -405,7 +405,7 @@ class Astrometry():
         self.date = date
         scale = SEDM_SPAXEL_ARCSEC
         rotation = SEDM_LEFT_ROTATION
-        position = 474, 537
+        position = 481, 537
 
         # if Time(date) >= Time("2020-10-04"):
         #     position = 1039.5, 968.5
