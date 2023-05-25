@@ -266,9 +266,9 @@ def filename_to_guider(filename, astrom=True, extinction=".fits", nomd5=True):
     for pf in pointfiles:
         date,hms = pf.split('_')[1:3]
         mjd = Time(f"{date[:4]}-{date[4:6]}-{date[6:]}" + " " + f"{hms[0:2]}:{hms[2:4]}:{hms[4:]}", format="iso").mjd
-        if (mjd - fileinfo["mjd"])*24*60 < 3:
+        if ((mjd - fileinfo["mjd"])*24*60 < 3) and (mjd > fileinfo["mjd"]):
             last_pointfile = pf
-        print(last_pointfile)
+        # print(last_pointfile)
     return [last_pointfile]
     # return [os.path.join(dirname,l) for l in os.listdir( get_datapath(fileinfo["date"]))
     #             if fileinfo["sedmid"] in l and key in l and (l.endswith(('.fits', '.fz')) if nomd5 else l) ]
