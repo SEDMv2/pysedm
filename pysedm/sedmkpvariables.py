@@ -9,7 +9,7 @@ DOME_TRACEBOUNDS = [70,230]
 TRACE_DISPERSION = 1.2*2 # PSF (sigma assuming gaussian) of the traces on the CCD.
 
 SEDM_INVERT = False #  Shall the x and y axis extracted in the hexagrid be inverted ?
-SEDM_ROT    = 315 # SEDM alignment to have north up
+SEDM_ROT    = 305 # SEDM alignment to have north up
 SEDM_MLA_RADIUS = 25
 
 # --- LBDA
