@@ -239,14 +239,10 @@ def filename_to_guider(filename, astrom=True, extinction=".fits", nomd5=True):
     key = "point_" if astrom else "g_"
     pointfiles = sorted(glob(f'{REDUXPATH}/phot/{fileinfo["date"]}/{key}*{fileinfo["date"]}*{fileinfo["name"]}*.new'))
     last_pointfile = None
-    print(pointfiles)
     for pf in pointfiles:
         date,hms = pf.split('_')[1:3]
         mjd = Time(f"{date[:4]}-{date[4:6]}-{date[6:]}" + " " + f"{hms[0:2]}:{hms[2:4]}:{hms[4:]}", format="iso").mjd
-        print(mjd)
-        if fileinfo["mjd"] < mjd:
-            continue
-        else:
+        if (mjd - fileinfo["mjd"])*24*60 < 3:
             last_pointfile = pf
         print(last_pointfile)
     return [last_pointfile]
