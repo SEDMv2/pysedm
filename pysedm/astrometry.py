@@ -25,7 +25,7 @@ from . import io
 from . import sedm
 
 
-SEDM_SPAXEL_ARCSEC = 0.72
+SEDM_SPAXEL_ARCSEC = 0.62
 SEDM_LEFT_ROTATION = 0.1 #* np.pi/180
 
 
