@@ -686,7 +686,7 @@ class Astrometry():
     def ifu_offset(self):
         """ Offset of the ifu centroid (spaxel 0,0 -> ifu_offset) """
         if not hasattr(self, "_ifu_offset"):
-            self.set_ifu_offset(0, 0)
+            self.set_ifu_offset(-4, 3)
         return self._ifu_offset
 
     @property
