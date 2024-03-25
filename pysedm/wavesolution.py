@@ -1170,7 +1170,7 @@ class VirtualArcSpectrum( BaseObject ):
             self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.7, self.arclines[l]["ampl"]*3]
             
             self._normguesses["mu%d_guess"%i]        = self.arclines[l]["mu"]+lines_shift
-            self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-5, self._normguesses["mu%d_guess"%i]+5]
+            self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-1, self._normguesses["mu%d_guess"%i]+4]
             
             self._normguesses["sig%d_guess"%i]       = 1.1 if (not "doublet" in self.arclines[l] or not self.arclines[l]["doublet"]) else 1.8
             self._normguesses["sig%d_boundaries"%i]  = [0.9,1.5] if (not "doublet" in self.arclines[l] or not self.arclines[l]["doublet"]) else [1.1, 3]
