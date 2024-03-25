@@ -13,7 +13,7 @@ SEDM_ROT    = 300 # SEDM alignment to have north up
 SEDM_MLA_RADIUS = 25
 
 # --- LBDA
-SEDM_LBDA = np.linspace(4600, 9300, 220)
+SEDM_LBDA = np.linspace(3700, 9300, 220)
 LBDA_PIXEL_CUT = 3
 
 DEFAULT_REFLBDA = 6000 # In Angstrom
@@ -78,8 +78,8 @@ LINES= {"Hg": # IN VACUUM
                         "info":"merge of 5771.210, 5792.276 blended"},
                5462.268 : {"ampl":65.,"mu":189-_REFORIGIN},
                4359.560   : {"ampl":50. ,"mu":130-_REFORIGIN},
-                4047.708 : {"ampl":27,"mu":105-_REFORIGIN},
-                3650.153 : {"ampl":15, "mu":71-_REFORIGIN},
+                4047.708 : {"ampl":27,"mu":108-_REFORIGIN},
+                3650.153 : {"ampl":15, "mu":78-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
               {4679.325 : {"ampl":15. ,"mu":164-_REFORIGIN},
