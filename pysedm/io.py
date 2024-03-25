@@ -10,11 +10,11 @@ from glob import glob
 from astropy.io.fits import getheader, getval
 from astropy.time import Time
 
-try:
-    from ztfquery.sedm import SEDMLOCAL_BASESOURCE
-    REDUXPATH = os.path.join(SEDMLOCAL_BASESOURCE, "redux")
-except:
-    REDUXPATH   = os.getenv('SEDMREDUXPATH',default="~/redux/")
+# try:
+#     from ztfquery.sedm import SEDMLOCAL_BASESOURCE
+#     REDUXPATH = os.path.join(SEDMLOCAL_BASESOURCE, "redux")
+# except:
+REDUXPATH   = os.getenv('SEDMREDUXPATH',default="~/redux/")
 
 if REDUXPATH == "~/redux/":
     warnings.warn(f"Default REDUXPATH {REDUXPATH} is used.")
