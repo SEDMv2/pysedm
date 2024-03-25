@@ -77,15 +77,15 @@ LINES= {"Hg": # IN VACUUM
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
                5462.268 : {"ampl":65.,"mu":189-_REFORIGIN},
-               4359.560   : {"ampl":50. ,"mu":140-_REFORIGIN},
-                4047.708 : {"ampl":27,"mu":120-_REFORIGIN},
-                3650.153 : {"ampl":15, "mu":91-_REFORIGIN},
+               4359.560   : {"ampl":50. ,"mu":130-_REFORIGIN},
+                4047.708 : {"ampl":27,"mu":105-_REFORIGIN},
+                3650.153 : {"ampl":15, "mu":71-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
-              {4679.325 : {"ampl":15. ,"mu":166-_REFORIGIN},
+              {4679.325 : {"ampl":15. ,"mu":164-_REFORIGIN},
                4801.254 : {"ampl":40. ,"mu":172-_REFORIGIN},
                5087.239 : {"ampl":60. ,"mu":185-_REFORIGIN},
-               6440.249 : {"ampl":30. ,"mu":226-_REFORIGIN},
+               6440.249 : {"ampl":30. ,"mu":232-_REFORIGIN},
                # - Cd and Xe seems to have the same lines
                # Almost same wavelength but diffent enough to save the code
                8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
