@@ -77,15 +77,15 @@ LINES= {"Hg": # IN VACUUM
                            "doublet":False,
                         "info":"merge of 5771.210, 5792.276 blended"},
                5462.268 : {"ampl":65.,"mu":189-_REFORIGIN},
-               4359.560   : {"ampl":45. ,"mu":133-_REFORIGIN},
-                4047.708 : {"ampl":24,"mu":106-_REFORIGIN},
-                3650.153 : {"ampl":7, "mu":67-_REFORIGIN},
+               4359.560   : {"ampl":50. ,"mu":140-_REFORIGIN},
+                4047.708 : {"ampl":27,"mu":120-_REFORIGIN},
+                3650.153 : {"ampl":15, "mu":91-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
-              {4679.325 : {"ampl":15. ,"mu":163-_REFORIGIN},
-               4801.254 : {"ampl":40. ,"mu":170-_REFORIGIN},
+              {4679.325 : {"ampl":15. ,"mu":166-_REFORIGIN},
+               4801.254 : {"ampl":40. ,"mu":172-_REFORIGIN},
                5087.239 : {"ampl":60. ,"mu":185-_REFORIGIN},
-               6440.249 : {"ampl":30. ,"mu":232-_REFORIGIN},
+               6440.249 : {"ampl":30. ,"mu":226-_REFORIGIN},
                # - Cd and Xe seems to have the same lines
                # Almost same wavelength but diffent enough to save the code
                8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
@@ -103,24 +103,24 @@ LINES= {"Hg": # IN VACUUM
 #                            "doublet":True,"info":"merge of 8945, 9050"},
 #               }
 
-        "Xe": {np.average([8233.90, 8282.39], weights=[1.43,1])  : {"ampl": 4. ,"mu":280-_REFORIGIN,
+        "Xe": {np.average([8233.90, 8282.39], weights=[2,1])  : {"ampl": 5. ,"mu":283-_REFORIGIN,
                             "doublet":False},# yes but really close
                             
-               np.average([8349.11, 8411.00], weights=[2,3])   : {"ampl": 5. ,"mu":282-_REFORIGIN,
+               np.average([8349.11, 8411.00], weights=[2,3])   : {"ampl": 1. ,"mu":285-_REFORIGIN,
                             "doublet":False}, # yes but really close
                             
                             
-               8821.83    : {"ampl": 7.,"mu":291-_REFORIGIN},
+               8821.83    : {"ampl": 11.,"mu":294-_REFORIGIN},
                    
-               np.average([8954.71,9047.93]) : {"ampl": 12.,"mu":293-_REFORIGIN,
+               np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":296-_REFORIGIN,
                              "doublet":True , "info": "merge of lines 9854.71,9047.93"},
-               9165.16    : {"ampl": 7.,"mu":307-_REFORIGIN},
+               9165.16    : {"ampl": 4.5,"mu":300-_REFORIGIN},
                
                # small lines but isolated
                # 7644.12    : {"ampl": 1.,"mu":264-_REFORIGIN},
                
-               #9425.    : {"ampl": 2.,"mu":309-_REFORIGIN,
-               #                "doublet":True , "info": "merge of lines 9400 and 9450"},
+               9425.    : {"ampl": 3.,"mu":309-_REFORIGIN,
+                              "doublet":True , "info": "merge of lines 9400 and 9450"},
                
                #9802.8    : {"ampl": 0.4,"mu":317-_REFORIGIN},
                #9938.0    : {"ampl": 0.4,"mu":320-_REFORIGIN},
