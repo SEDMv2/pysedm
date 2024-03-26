@@ -1109,11 +1109,17 @@ class VirtualArcSpectrum( BaseObject ):
         """ """
         if self.arcname != "Hg":
             raise ValueError("This method is only for Hg")
-
-        wave_expected = self.arclines[4359.56]["mu"]
-        wave = np.min(self.lbda[self.get_arg_maxflux(2)])
-
-        return np.mean(np.atleast_1d(wave - wave_expected))
+        lines = [3650.153,4359.56]
+        shifts=[]
+        for i,line in enumerate(lines):
+            wave_expected = self.arclines[line]["mu"]
+            if i==0:
+                wave = np.min(self.lbda[self.get_arg_maxflux(5)])
+            else:
+                wave = np.min(self.lbda[self.get_arg_maxflux(2)])
+            shift = np.mean(np.atleast_1d(wave - wave_expected))
+            shifts.append(shift)
+        return shifts
 
     def custom_Cd_line_shift(self):
         """ """
@@ -1121,7 +1127,7 @@ class VirtualArcSpectrum( BaseObject ):
             raise ValueError("This method is only for Cd")
 
         wave_expected = self.arclines[6440.249]["mu"]
-        wave = np.max(self.lbda[self.get_arg_maxflux(3)])
+        wave = np.max(self.lbda[self.get_arg_maxflux(4)])
 
         return np.mean(np.atleast_1d(wave - wave_expected))
     
@@ -1267,7 +1273,7 @@ class VirtualArcSpectrum( BaseObject ):
             lines_shift = self.get_line_shift()
 
         if self.arcname == "Hg":
-            Hg_lines_shift = self.custom_Hg_line_shift()
+            Hg_lines_shifts = self.custom_Hg_line_shift()
 
         if self.arcname == "Cd":
             Cd_lines_shift = self.custom_Cd_line_shift()
@@ -1277,8 +1283,10 @@ class VirtualArcSpectrum( BaseObject ):
         for i,l in enumerate(self.usedlines):
             # print(l)
             # print(self.arclines[l])
-            if self.arcname == "Hg" and l in [3650.153, 4047.708, 4359.56]:
-                added_lines_shift = Hg_lines_shift
+            if self.arcname == "Hg" and l in [4047.708, 4359.56]:
+                added_lines_shift = Hg_lines_shifts[1]
+            elif self.arcname == "Hg" and l in [3650.153]:
+                added_lines_shift = Hg_lines_shifts[0]
             elif self.arcname == "Cd" and l in [6440.249]:
                 added_lines_shift = Cd_lines_shift
             else:
