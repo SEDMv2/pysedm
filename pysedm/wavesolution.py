@@ -1036,17 +1036,11 @@ class VirtualArcSpectrum( BaseObject ):
         """ """
         if self.arcname != "Hg":
             raise ValueError("This method is only for Hg")
-        lines = [3650.153,4359.56]
-        shifts=[]
-        for i,line in enumerate(lines):
-            wave_expected = self.arclines[line]["mu"]
-            if i==0:
-                wave = np.min(self.lbda[self.get_arg_maxflux(5)])
-            else:
-                wave = np.min(self.lbda[self.get_arg_maxflux(2)])
-            shift = np.mean(np.atleast_1d(wave - wave_expected))
-            shifts.append(shift)
-        return shifts
+
+        wave_expected = self.arclines[4359.56]["mu"]
+        wave = np.min(self.lbda[self.get_arg_maxflux(2)])
+        shift = np.mean(np.atleast_1d(wave - wave_expected))
+        return shift
 
     def custom_Cd_line_shift(self):
         """ """
@@ -1193,7 +1187,7 @@ class VirtualArcSpectrum( BaseObject ):
             lines_shift = self.get_line_shift()
 
         if self.arcname == "Hg":
-            Hg_lines_shifts = self.custom_Hg_line_shift()
+            Hg_lines_shift = self.custom_Hg_line_shift()
 
         if self.arcname == "Cd":
             Cd_lines_shift = self.custom_Cd_line_shift()
@@ -1202,10 +1196,8 @@ class VirtualArcSpectrum( BaseObject ):
         for i,l in enumerate(self.usedlines):
             # print(l)
             # print(self.arclines[l])
-            if self.arcname == "Hg" and l in [4047.708, 4359.56]:
-                added_lines_shift = Hg_lines_shifts[1]
-            elif self.arcname == "Hg" and l in [3650.153]:
-                added_lines_shift = Hg_lines_shifts[0]
+            if self.arcname == "Hg" and l in [3650.153,4047.708, 4359.56]:
+                added_lines_shift = Hg_lines_shift
             elif self.arcname == "Cd" and l in [6440.249]:
                 added_lines_shift = Cd_lines_shift
             else:
@@ -1214,7 +1206,7 @@ class VirtualArcSpectrum( BaseObject ):
             self._normguesses["ampl%d_boundaries"%i] = [self.arclines[l]["ampl"]*0.7, self.arclines[l]["ampl"]*3]
             
             self._normguesses["mu%d_guess"%i]        = self.arclines[l]["mu"]+added_lines_shift
-            self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-2, self._normguesses["mu%d_guess"%i]+2]
+            self._normguesses["mu%d_boundaries"%i]   = [self._normguesses["mu%d_guess"%i]-3, self._normguesses["mu%d_guess"%i]+3]
             
             self._normguesses["sig%d_guess"%i]       = 1.1 if (not "doublet" in self.arclines[l] or not self.arclines[l]["doublet"]) else 1.8
             self._normguesses["sig%d_boundaries"%i]  = [0.9,1.5] if (not "doublet" in self.arclines[l] or not self.arclines[l]["doublet"]) else [1.1, 3]
