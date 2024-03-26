@@ -1277,7 +1277,7 @@ class VirtualArcSpectrum( BaseObject ):
         for i,l in enumerate(self.usedlines):
             # print(l)
             # print(self.arclines[l])
-            if self.arcname == "Hg" and l in [3650.153,4047.708, 4359.56]:
+            if self.arcname == "Hg" and l in [3650.153, 4047.708, 4359.56]:
                 added_lines_shift = Hg_lines_shift
             elif self.arcname == "Cd" and l in [6440.249]:
                 added_lines_shift = Cd_lines_shift
