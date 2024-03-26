@@ -1048,7 +1048,7 @@ class VirtualArcSpectrum( BaseObject ):
             raise ValueError("This method is only for Cd")
 
         wave_expected = self.arclines[6440.249]["mu"]
-        wave = np.max(self.lbda[self.get_arg_maxflux(4)])
+        wave = np.max(self.lbda[self.get_arg_maxflux(3)])
 
         return np.mean(np.atleast_1d(wave - wave_expected))
     
