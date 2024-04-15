@@ -741,6 +741,31 @@ def display_on_hexagrid(value, traceindexes,
     fig.figout(savefile=savefile, show=show)
     return {"ax":axim,"fig":fig}
 
+def data_to_color_plotly(cube, toshow="data", lbdalim=None,
+            vmin=None, vmax=None, **kwargs):
+    """
+    Converts data to normalized color values without using a matplotlib colormap.
+    """
+
+    # - value limits
+    if lbdalim is None:
+        lbdalim = [None,None]
+    elif np.shape(lbdalim) != (2,):
+        raise TypeError("lbdalim must be None or [min/max]")
+
+    # - Scaling used
+    mean_flux =  cube.get_slice(lbda_min=lbdalim[0], lbda_max=lbdalim[1], data=toshow, **kwargs)
+
+    # - vmin / vmax trick
+    vmin = np.nanpercentile(mean_flux, 0.5) if vmin is None else \
+      np.nanpercentile(mean_flux, float(vmin)) if type(vmin) == str else\
+      vmin
+    vmax = np.nanpercentile(mean_flux, 99.5) if vmax is None else \
+      np.nanpercentile(mean_flux, float(vmax)) if type(vmax) == str else\
+      vmax
+
+    return  (mean_flux-vmin)/(vmax-vmin)
+
 
 #################################
 #                               #
@@ -1609,6 +1634,130 @@ class SEDMExtractStar( BaseObject ):
 
         return self.es_products["psffit"].slices[sliceid]["slpsf"].show(savefile=savefile, **kwargs)
 
+    def plotly_extract(self, vmin="2", vmax="98", lbdalim=[6000,9000]):
+        """ Show the MLA using Plotly, allows for selection of centroid and a spaxel region.
+
+        Parameters
+        ----------
+        ax: [None, mpl's Axes] -optional-
+            The Axes where the plot should be drawn.
+            If None this will create a new figure and new axes (returned)
+
+        savefile: [string] -optional-
+            Where the figure will be saved (savefile should have an extension).
+
+        vmin, vmax: [float/str] -optional-
+            Lower and upper limit for the colormap.
+            If string, they will be considered as 'in percent of data'
+
+        lbdalim: [2-value array] -optional-
+            Lower and upper wavelength limit that will be integrated to provide
+            the spaxel flux.
+
+        Returns
+        tuple: selected spaxels to use (list of indices) is first, then the selected centroid (tuple of coordinates)
+
+        """
+        from dash import Dash, html, dash_table, dcc, callback, Output, Input
+        import plotly.express as px
+        from dash.exceptions import PreventUpdate
+        import pandas as pd
+
+        # Convert cube indices to x, y coordinates
+        xy = np.array([np.array(a) for a in self.cube.index_to_xy(self.cube.indexes)])
+        x, y = xy.T
+        colors = data_to_color_plotly(self.cube, lbdalim=lbdalim, vmin=vmin, vmax=vmax)
+        x, y, colors = [np.ravel(i) for i in [x, y, colors]]
+        cube_df = pd.DataFrame({'x': x, 'y': y, 'color': colors})
+
+        # Initialize the Dash app
+        app = Dash(__name__)
+        spaxels_to_use = [None]
+        centroid = [(0,0)] # default centroid
+        fig = px.scatter(cube_df, x='x', y='y', color = 'color', color_continuous_scale="Viridis",
+                         range_color=[np.nanmin(colors), np.nanmax(colors)*0.7],
+                         hover_data = ['x', 'y'], width=700, height=700)
+        fig.update_traces(marker_size=17)
+        fig.update_layout(dragmode='lasso', clickmode='event+select')
+
+        # Generate the average spectrum from the cube data
+        spec = np.nanmean(self.cube.data.T, axis=0)
+        spec_fig = px.line(x=self.cube.lbda, y=spec, width=600, height=300)
+        spec_fig.update_layout(xaxis_title='Wavelength', yaxis_title='Flux')
+
+        # add spectrum to the figure
+        app.layout = html.Div(className='cube', children=[
+            html.Div(children=[
+                dcc.Graph(figure=fig, id='cube-display', style={'display': 'inline-block'}, config={
+            'modeBarButtonsToRemove': ['zoom', 'pan']}, clickData=None),
+                dcc.Graph(figure=spec_fig, id='spectrum-display', style={'display': 'inline-block'})
+            ])
+        ])
+
+        @callback(
+            Output('spectrum-display', 'figure'),
+            Input('cube-display', 'selectedData'))
+        def get_update_spec(selectedData):
+            # update spectrum based on selected region
+            if selectedData is None:
+                spec_fig = px.line(x=self.cube.lbda, y=spec)
+                return spec_fig
+            if len(selectedData['points']) < 2:
+                fig.update_traces(selectedpoints=None)
+                spec_fig = px.line(x=self.cube.lbda, y=spec)
+                return spec_fig
+            else:
+                # Extract indices of selected spaxels from cube
+                spaxels_selected = []
+                x_coords = [p['x'] for p in selectedData['points']]
+                y_coords = [p['y'] for p in selectedData['points']]
+
+                spax_indices = []
+                for i in range(len(x_coords)):
+                    x_i, y_i = x_coords[i], y_coords[i]
+                    dataframe_index = np.where(np.isclose(cube_df['x'].values, x_i)
+                                            & np.isclose(cube_df['y'].values, y_i))[0][0]
+                    spaxel_dict = cube_df.loc[dataframe_index].to_dict()
+                    x_true, y_true = spaxel_dict['x'], spaxel_dict['y']
+                    spaxel = self.cube.xy_to_index([x_true, y_true])[0]
+                    #     spaxel = spaxel_index[0][0]
+                    spaxels_selected.append(spaxel)
+                    spax_indices.append(dataframe_index)
+                spaxels_to_use.append(spaxels_selected) # kind of a hack
+                # Update the spectrum based on selected spaxels
+                new_spectrum = self.cube.get_spectrum(spax_indices)
+
+                spec_fig = px.line(x=new_spectrum.lbda, y=new_spectrum.data,
+                                   width=600, height=600)
+                spec_fig.update_layout(xaxis_title='Wavelength', yaxis_title='Flux')
+
+                return spec_fig
+
+        @app.callback(
+            Output("cube-display", "figure"),
+            Input("cube-display", "clickData"),
+            Input("cube-display", "figure")
+        )
+        def set_centroid(click_info, figure):
+            # click to set centroid
+            if click_info is None:
+                return figure
+            else:
+                fig = px.scatter(cube_df, x='x', y='y', color = 'color', color_continuous_scale="Viridis",
+                         range_color=[np.nanmin(colors), np.nanmax(colors)*0.7],
+                         hover_data = ['x', 'y'], width=700, height=700)
+                fig.update_traces(marker_size=17)
+                fig.update_layout(dragmode='lasso', clickmode='event+select')
+                fig.add_scatter(x=[click_info['points'][0]['x']],
+                                           y=[click_info['points'][0]['y']],
+                                marker=dict(symbol="x"), name='Centroid')
+                centroid.append((click_info['points'][0]['x'], click_info['points'][0]['y']))
+                return fig
+
+
+        app.run()
+
+        return spaxels_to_use[-1], centroid[-1]
 
     # =============== #
     #  Properties     #
