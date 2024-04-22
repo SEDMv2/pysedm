@@ -1671,8 +1671,8 @@ class SEDMExtractStar( BaseObject ):
 
         # Initialize the Dash app
         app = Dash(__name__)
-        spaxels_to_use = [None]
-        centroid = [(0,0)] # default centroid
+        # spaxels_to_use = [None]
+        # centroid = [(0,0)] # default centroid
         fig = px.scatter(cube_df, x='x', y='y', color = 'color', color_continuous_scale="Viridis",
                          range_color=[np.nanmin(colors), np.nanmax(colors)*0.7],
                          hover_data = ['x', 'y'], width=700, height=700)
@@ -1690,7 +1690,8 @@ class SEDMExtractStar( BaseObject ):
                 dcc.Graph(figure=fig, id='cube-display', style={'display': 'inline-block'}, config={
             'modeBarButtonsToRemove': ['zoom', 'pan']}, clickData=None),
                 dcc.Graph(figure=spec_fig, id='spectrum-display', style={'display': 'inline-block'})
-            ])
+            ]),
+            html.Button('Send', id='send-button', n_clicks=0)
         ])
 
         @callback(
@@ -1722,13 +1723,16 @@ class SEDMExtractStar( BaseObject ):
                     #     spaxel = spaxel_index[0][0]
                     spaxels_selected.append(spaxel)
                     spax_indices.append(dataframe_index)
-                spaxels_to_use.append(spaxels_selected) # kind of a hack
+                # spaxels_to_use.append(spaxels_selected) # kind of a hack
                 # Update the spectrum based on selected spaxels
                 new_spectrum = self.cube.get_spectrum(spax_indices)
-
                 spec_fig = px.line(x=new_spectrum.lbda, y=new_spectrum.data,
                                    width=600, height=600)
                 spec_fig.update_layout(xaxis_title='Wavelength', yaxis_title='Flux')
+
+                # set the selected spaxels to use for extractstar
+                self.set_fitted_spaxels(spaxels_selected)
+                self._properties["from_humain"] = True
 
                 return spec_fig
 
@@ -1750,13 +1754,25 @@ class SEDMExtractStar( BaseObject ):
                 fig.add_scatter(x=[click_info['points'][0]['x']],
                                            y=[click_info['points'][0]['y']],
                                 marker=dict(symbol="x"), name='Centroid')
-                centroid.append((click_info['points'][0]['x'], click_info['points'][0]['y']))
+                # centroid.append((click_info['points'][0]['x'], click_info['points'][0]['y']))
+                self.set_centroid(centroid=[click_info['points'][0]['x'], click_info['points'][0]['y']], centroiderr=[2,2])
+                self._properties["from_humain"] = True
                 return fig
 
+        # add a callback for the send button, set extractstar.dashinput to true if button is clicked
+        @app.callback(
+            Output('send-button', 'n_clicks'),
+            Input('send-button', 'n_clicks'))
+        def send_button(n_clicks):
+            if n_clicks is None:
+                raise PreventUpdate
+            elif n_clicks > 0:
+                self.dashinput = True
+            return n_clicks
 
         app.run()
 
-        return spaxels_to_use[-1], centroid[-1]
+        # return spaxels_to_use[-1], centroid[-1]
 
     # =============== #
     #  Properties     #
@@ -1893,7 +1909,7 @@ class SEDMCube( Cube ):
     """ SEDM Cube """
     DERIVED_PROPERTIES = ["sky"]
 
-    def extract_pointsource(self, display=False, displayprop={},
+    def extract_pointsource(self, display=False, displaydash=False, displayprop={},
                                 step1range=[4500,7000], step1bins=6,
                                 centroid="auto", prop_position={},
                                 spaxelbuffer = 10,
@@ -1920,6 +1936,7 @@ class SEDMCube( Cube ):
         """
         #from . import astrometry
         from shapely import geometry
+        from waiting import wait
 
         if verbose: print(f"* Starting ExtractStar using the '{psfmodel}' model")
         # input convertion
@@ -1932,9 +1949,15 @@ class SEDMCube( Cube ):
 
         if verbose: print("* Selecting spaxel to fit.")
         if display: # humain interaction
-            import matplotlib.pyplot as mpl
-            self.extractstar.get_humain_input()
-            self.extractstar.update_from_humain_input()
+            if displaydash:
+                self.extractstar.dashinput = False
+                self.extractstar.plotly_extract()
+                wait(lambda: self.extractstar.dashinput, timeout_seconds=600)
+                print(self.extractstar.centroid, self.extractstar.dashinput)
+            else:
+                import matplotlib.pyplot as mpl
+                self.extractstar.get_humain_input()
+                self.extractstar.update_from_humain_input()
             
         elif spaxels_to_use is not None: # You fixed which you want
             if len(spaxels_to_use)<4:
