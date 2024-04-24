@@ -227,6 +227,7 @@ def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
     -------
 
     """
+    lamps = ["Hg","Xe"]
     timedir = io.get_datapath(date)
         
     if verbose:
