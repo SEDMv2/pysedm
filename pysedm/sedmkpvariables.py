@@ -81,20 +81,20 @@ LINES= {"Hg": # IN VACUUM
                 4047.708 : {"ampl":27,"mu":108-_REFORIGIN},
                 3650.153 : {"ampl":15, "mu":78-_REFORIGIN},
                },
-        "Cd":  # IN VACUUM
-              {4679.325 : {"ampl":15. ,"mu":164-_REFORIGIN},
-               4801.254 : {"ampl":40. ,"mu":172-_REFORIGIN},
-               5087.239 : {"ampl":60. ,"mu":185-_REFORIGIN},
-               6440.249 : {"ampl":30. ,"mu":232-_REFORIGIN},
-               # - Cd and Xe seems to have the same lines
-               # Almost same wavelength but diffent enough to save the code
-               8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
-                            "backup":"Xe", # used only if Xe is not there
-                            "doublet":True,"info":"merge of 8230, 8341"},
-               #8818.51  : {"ampl": 0.8,"mu":295-_REFORIGIN},
-               #9000.01  : {"ampl": 0.5,"mu":302-_REFORIGIN,
-               #             "doublet":True,"info":"merge of 8945, 9050"},
-                },
+        # "Cd":  # IN VACUUM
+        #       {4679.325 : {"ampl":15. ,"mu":164-_REFORIGIN},
+        #        4801.254 : {"ampl":40. ,"mu":172-_REFORIGIN},
+        #        5087.239 : {"ampl":60. ,"mu":185-_REFORIGIN},
+        #        6440.249 : {"ampl":30. ,"mu":232-_REFORIGIN},
+        #        # - Cd and Xe seems to have the same lines
+        #        # Almost same wavelength but diffent enough to save the code
+        #        8280.01  : {"ampl": 1. ,"mu":275-_REFORIGIN,
+        #                     "backup":"Xe", # used only if Xe is not there
+        #                     "doublet":True,"info":"merge of 8230, 8341"},
+        #        #8818.51  : {"ampl": 0.8,"mu":295-_REFORIGIN},
+        #        #9000.01  : {"ampl": 0.5,"mu":302-_REFORIGIN,
+        #        #             "doublet":True,"info":"merge of 8945, 9050"},
+        #         },
         # Important for Xe. Keep the Bright line, the First one. or change get_line_shift()
 #        "Xe": {8280.    : {"ampl": 1. ,"mu":280-_REFORIGIN,
 #                            "doublet":True,"info":"merge of 8230, 8341"},
