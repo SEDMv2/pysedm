@@ -21,7 +21,7 @@ def load_pkl(filename):
     """
     """
     try:
-        import cPickle as pkl
+        import _pickle as pkl
     except:
         import pickle
         with open(filename, 'rb') as f:
@@ -37,7 +37,7 @@ def dump_pkl(data,filename,**kwargs):
     """
     """
     try:
-        from cPickle import dump
+        from _pickle import dump
     except:
         from pickle import dump
         
