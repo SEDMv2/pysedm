@@ -79,7 +79,7 @@ LINES= {"Hg": # IN VACUUM
                5462.268 : {"ampl":65.,"mu":189-_REFORIGIN},
                4359.560   : {"ampl":50. ,"mu":130-_REFORIGIN},
                 4047.708 : {"ampl":27,"mu":108-_REFORIGIN},
-                3650.153 : {"ampl":15, "mu":78-_REFORIGIN},
+                # 3650.153 : {"ampl":15, "mu":78-_REFORIGIN},
                },
         "Cd":  # IN VACUUM
               {4679.325 : {"ampl":15. ,"mu":164-_REFORIGIN},
