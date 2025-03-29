@@ -109,7 +109,7 @@ LINES= {"Hg": # IN VACUUM
                np.average([8349.11, 8411.00], weights=[2,3])   : {"ampl": 1. ,"mu":285-_REFORIGIN,
                             "doublet":False}, # yes but really close
                             
-                            
+
                8821.83    : {"ampl": 11.,"mu":294-_REFORIGIN},
                    
                np.average([8954.71,9047.93]) : {"ampl": 11.,"mu":296-_REFORIGIN,
