@@ -152,19 +152,19 @@ def get_night_files(date, kind, target=None, extention=".fits"):
                  (extention is None or (f.endswith(extention) or f.endswith(extention+".gz")))
                ]
 
-def get_cleaned_sedmcube(filename):
-    """ get sky and flux calibrated cube """
-
-    cube = get_sedmcube(filename)
-
-    fluxcalfile = io.fetch_nearest_fluxcal(date, cube.filename)
-    fluxcal = fluxcalibration.load_fluxcal_spectrum(fluxcalfile)
-
-    cube.remove_sky()
-    #cube.scale_by(fluxcal.data) # old version
-    cube.scale_by( fluxcal.get_inversed_sensitivity(cube.header.get("AIRMASS", 1.1)), onraw=False )
-
-    return cube
+# def get_cleaned_sedmcube(filename):
+#     """ get sky and flux calibrated cube """
+#
+#     cube = get_sedmcube(filename)
+#
+#     fluxcalfile = fetch_nearest_fluxcal(date, cube.filename)
+#     fluxcal = fluxcalibration.load_fluxcal_spectrum(fluxcalfile)
+#
+#     cube.remove_sky()
+#     #cube.scale_by(fluxcal.data) # old version
+#     cube.scale_by( fluxcal.get_inversed_sensitivity(cube.header.get("AIRMASS", 1.1)), onraw=False )
+#
+#     return cube
   
 #########################
 #                       #

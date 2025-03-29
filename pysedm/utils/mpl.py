@@ -4,6 +4,7 @@
 import warnings
 import numpy         as np
 import matplotlib.pyplot as mpl
+import matplotlib
 from .tools import make_method
 from pyifu.mplinteractive import InteractiveCube
 LAMPS = np.asarray(["Cd","Hg","Xe"])

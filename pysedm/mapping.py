@@ -141,7 +141,7 @@ class Mapper( BaseObject ):
     def traceindexi_to_j(self, traceindex, i, maxlines=1e4, inverted=False):
         """ get thethe center of the trace `traceindex` for the column `i`"""
         if is_arraylike(i):
-            return np.asarray([self.traceindexi_to_j(traceindex, i_) for _ in i])
+            return np.asarray([self.traceindexi_to_j(traceindex, _) for _ in i])
         
         if i is None: return np.asarray([None,None])
 

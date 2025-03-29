@@ -267,8 +267,7 @@ def build_backgrounds(date, client,
 #                          #
 ############################
 
-def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
-                       use_fine_tuned_traces=False,
+def build_wavesolution(night, client, verbose=False, ntest=None, idxrange=None,
                        wavedegree=5, contdegree=1, show_progress=False,
                        lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=False,
                        xybounds=None, rebuild=True):

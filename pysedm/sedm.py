@@ -1522,7 +1522,7 @@ class SEDMExtractStar( BaseObject ):
         """
 
         from bokeh.plotting import ColumnDataSource, figure
-        from bokeh.models import MultiPolygons
+        from bokeh.models import MultiPolygons, Text
         from bokeh.colors import RGB
  
         plot = figure( 
@@ -1825,7 +1825,7 @@ class SEDMExtractStar( BaseObject ):
             if self.fitted_spaxels is None:
                 return self.cube
             # spaxels to fit have been defined.
-            self._side_properties["fitted_cube"] = self.get_partial_cube( spaxels_to_use, np.arange( len(self.lbda)) )
+            self._side_properties["fitted_cube"] = self.get_partial_cube(spaxels_to_use, np.arange( len(self.lbda)) )
 
         return self._side_properties["fitted_cube"]
 
