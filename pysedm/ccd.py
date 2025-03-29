@@ -36,9 +36,7 @@ Then to set this Matching to all the ScienceCCD objects.
 
 """
 
-__all__ = ["get_dome","get_ccd"]
-
-##################################
+__all__ = ["get_dome","get_ccd"]##################################
 #                                #
 #   Object Generators            #
 #                                #
@@ -79,8 +77,8 @@ def get_ccd(lampfile, ccdspec_mask=None,
                                 savefile=savefile_traceflexure, get_object=False)
 
             new_tracematch = lamp.tracematch.get_shifted_tracematch(0, j_offset)
-            new_tracematch.set_buffer( TRACE_DISPERSION)
-            lamp.set_tracematch(new_tracematch )
+            new_tracematch.set_buffer(TRACE_DISPERSION)
+            lamp.set_tracematch(new_tracematch)
             lamp.header["JFLXCORR"] =  (True, "Is TraceMatch corrected for j flexure?")
             lamp.header["CCDJFLX"] =  (j_offset, "amplitude in pixel of the  j flexure Trace correction")
         else:
@@ -435,7 +433,7 @@ class CCD( BaseCCD ):
         maskidx  = self.get_trace_mask(traceindex, finetune=finetune)
         return np.sum(eval("self.%s"%on)*maskidx, axis=0)
 
-    def get_xslice(self, i, on="data"):
+    def get_xslice(self, i, on="data", warn_variance=False):
         """ build a `CCDSlice` based on the ith-column.
 
         Returns
@@ -446,44 +444,45 @@ class CCD( BaseCCD ):
 
         slice_ = CCDSlice(None)
         if "data" in on and not self.has_var():
-            warnings.warn("Setting the default variance for 'get_xslice' ")
+            if warn_variance:
+                warnings.warn("Setting the default variance for 'get_xslice' ")
+                
             self.set_default_variance()
 
-        var = self.var.T[i] if 'data' in on else np.ones(np.shape("self.%s"%on))*np.nanstd("self.%s"%on)
+        var = self.var.T[i] if 'data' in on else np.ones(np.shape(f"self.{on}"))*np.nanstd(f"self.{on}")
 
-        slice_.create(eval("self.%s.T[i]"%on), variance = var,
+        slice_.create(eval(f"self.{on}.T[i]"), variance = var,
                     lbda = np.arange(len(self.data.T[i])), logwave=False)
 
         slice_.set_tracebounds(self.tracematch.get_traces_crossing_x_ybounds(i))
 
         return slice_
 
-    def fit_background(self, start=2, jump=10, multiprocess=True, set_it=True, smoothing=[0,5], **kwargs):
+    def fit_background(self, client=None, start=2, jump=10, set_it=True, smoothing=[0,5], **kwargs):
         """ """
         from .background import get_background, fit_background
-        self._background = get_background( fit_background(self, start=start, jump=jump,
-                                                            multiprocess=multiprocess, **kwargs),
-                                               smoothing=smoothing )
+        self._background = get_background( fit_background(self, start=start, jump=jump, client=client, **kwargs),
+                                           smoothing=smoothing )
         if set_it:
             self.set_background(self._background.background, force_it=True)
 
-
-    def fetch_background(self, set_it=True, build_if_needed=True, ncore=None, **kwargs):
+    def fetch_background(self, set_it=True, build_if_needed=True, client=None, **kwargs):
         """ 
-        ncore is used only if build_background() is called.
+        client is used only if build_background() is called.
         """
         from .background import load_background
         from .io import filename_to_background_name
         # ---------------- #
         #  Test it exists  #
         # ---------------- #
-        from glob import glob
-        if len(glob(filename_to_background_name(self.filename)))==0:
-            warnings.warn("No background has been found for %s"%self.filename)
+        import os
+        if not os.path.isfile(filename_to_background_name(self.filename)):
+            warnings.warn(f"No background has been found for {self.filename}")
             if not build_if_needed:
                 raise IOError("Since build_if_needed=False, No background available.")
+            
             from .background import build_background
-            build_background(self, ncore=ncore, **kwargs)
+            build_background(self, client=client, **kwargs)
             warnings.warn("A background has been built")
 
         self._background = load_background( filename_to_background_name( self.filename ))
@@ -541,7 +540,7 @@ class CCD( BaseCCD ):
         minpix, maxpix = self.tracematch.get_trace_xbounds(traceindex)
         mask = pixs[(pixs>minpix)* (pixs<maxpix)][::-1]
         if lbda is not None:
-            from scipy.interpolate     import interp1d
+            from scipy.interpolate  import interp1d
             pxl_wanted = wavesolution.lbda_to_pixels(lbda, traceindex) + pixel_shift
             flux = interp1d(pixs[mask], f[mask], kind=kind)(pxl_wanted)
             var  = interp1d(pixs[mask], v[mask], kind=kind)(pxl_wanted) if v is not None else v
@@ -582,7 +581,7 @@ class CCD( BaseCCD ):
            [using the ids_to_index() and index_to_xy() methods from hexagrid]
 
         If anything false (most likely the interpolation because of wavelength matching)
-        the flux (or variance) per lbda will be set to an array of NaNs
+        the flux (or variance) per lbda will be set to an array of nans
 
         All the spaxels fluxes will be set to a cube (SEDMCube see .sedm)
 
@@ -616,6 +615,7 @@ class CCD( BaseCCD ):
         if rotation is None:
             rotation = SEDM_ROT
         # - index check
+        
         if traceindexes is None:
             traceindexes = np.sort(list(wavesolution.wavesolutions.keys()))
 
@@ -641,18 +641,22 @@ class CCD( BaseCCD ):
                                                                 get_spectrum=False,
                                                                 pixel_shift=pixel_shift)
             except:
-                warnings.warn("FAILING EXTRACT_SPECTRUM for trace index %d: most likely wavesolution failed for this trace. *NaN Spectrum set*"%i_)
-                flux_ = np.ones(len(lbda) )*np.NaN
-                variance_ = np.ones(len(lbda) )*np.inf
+                print(i_)
+                raise ValueError(f"not working for {i_}")
+            
+        #    except:
+        #        warnings.warn("FAILING EXTRACT_SPECTRUM for trace index %d: most likely wavesolution failed for this trace. *nan Spectrum set*"%i_)
+        #        flux_ = np.ones(len(lbda) )*np.nan
+        #        variance_ = np.ones(len(lbda) )*np.inf
 
             cubeflux_[i_] = flux_
             if cubevar_ is not None:
                 cubevar_[i_] = variance_
             #except:
             #    warnings.warn("FAILED FOR %s. Most likely, the requested wavelength are not fully covered by the trace"%i_)
-            #    cubeflux_[i_] = np.zeros(len(lbda))*np.NaN
+            #    cubeflux_[i_] = np.zeros(len(lbda))*np.nan
             #    if cubevar_ is not None:
-            #        cubevar_[i_] = np.zeros(len(lbda))*np.NaN
+            #        cubevar_[i_] = np.zeros(len(lbda))*np.nan
 
         # ------------ #
         # - MultiThreading to speed this up
@@ -662,20 +666,24 @@ class CCD( BaseCCD ):
         _ = [_build_ith_flux_(i) for i in used_indexes]
 
         cubeflux = np.asarray([cubeflux_[i] for i in used_indexes])
-        cubevar  = np.asarray([cubevar_[i]   for i in used_indexes]) if cubevar_ is not None else None
+        cubevar  = np.asarray([cubevar_[i] for i in used_indexes]) if cubevar_ is not None else None
 
         # - Fill the Cube
         #  SEDM DEPENDENT
         hexagrid.set_rot_degree(rotation)
         spaxels_position = np.asarray(hexagrid.index_to_xy( hexagrid.ids_to_index(used_indexes),
-                                        invert_rotation=False,
+                                        invert_rotation=True, # CAREFUL HERE
                                         switch_axis=SEDM_INVERT)).T
 
 
         spaxel_map = {i:c for i,c in zip(used_indexes, spaxels_position)}
 
-        cube.create(cubeflux.T,lbda=lbda, spaxel_mapping=spaxel_map, variance=cubevar.T)
+        if cubevar is not None:
+            cubevar = cubevar.T #
+            
+        cube.create(cubeflux.T,lbda=lbda, spaxel_mapping=spaxel_map, variance=cubevar)
         cube.set_spaxel_vertices(np.dot(hexagrid.grid_rotmatrix,SEDMSPAXELS.T).T)
+        cube._lbda_to_header_(cube.lbda) # force dump lbda to the header.
         return cube
 
 
@@ -810,11 +818,11 @@ class CCD( BaseCCD ):
         if vmin is None:
             vmin = 0
         if type(vmin) == str:
-            vmin = np.percentile(data, vmin)
+            vmin = np.percentile(data, float(vmin) )
         if vmax is None:
             vmax = "95"
         if type(vmax) == str:
-            vmax = np.percentile(data, vmax)
+            vmax = np.percentile(data, float(vmax) )
 
         #  parameters
         ntraces = len(traceindexes)
@@ -866,7 +874,7 @@ class CCD( BaseCCD ):
 
         if add_mask is not None and cut_bright_pixels is not None:
             data_ = self.rawdata.copy()
-            data_[add_mask] = np.NaN
+            data_[add_mask] = np.nan
             add_mask = add_mask + (data_>np.percentile(data_[data_==data_],50))
 
         if exclude_edges:
@@ -1101,7 +1109,7 @@ class CCDSlice( Spectrum ):
 
         ax.specplot(self.lbda, self.data, var=self.variance, color="0.7")
         dataout = self.data.copy()
-        dataout[~self.tracemaskout] = np.NaN
+        dataout[~self.tracemaskout] = np.nan
         ax.specplot(self.lbda, dataout, var=None, color="C1")
 
         if show_model and self.contmodel is not None:

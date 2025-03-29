@@ -6,7 +6,7 @@ import os
 import warnings
 #import matplotlib
 #matplotlib.use('Agg')
-import matplotlib.pyplot as mpl
+import matplotlib.pyplot as plt
 from glob import glob
 
 from astrobject.utils.tools import dump_pkl
@@ -16,19 +16,36 @@ from .. import io
 
 from ..ccd import get_ccd
 from ..spectralmatching import get_tracematcher, illustrate_traces, load_trace_masks
-from ..wavesolution import get_wavesolution, Flexure
 
 from ..sedm import INDEX_CCD_CONTOURS, TRACE_DISPERSION, build_sedmcube, build_calibrated_sedmcube, SEDM_LBDA
+
+
+# Expected Sequence
+## Night Calibration 
+# night =
+# client = 
+# 1. build_backgrounds(night, client, only_lamps=True)
+# 2. build_tracematcher(night, client)
+# 3. build_hexagonalgrid(nigh) # fast, no need for client
+# 4. build_wavesolution(nigh, client)
+# 5. build_flatfield(nigh, client)
+## After each exposure
+# target_name = 
+# 6. build_backgrounds(night, client, target=target_name)
+# 7. build_night_cubes(night, target=target_name)
+
+
+
 
 ############################
 #                          #
 #  Spectral Matcher        #
 #                          #
 ############################
-def build_tracematcher(date, verbose=True, width=None,
+def build_tracematcher(date, client,
+                           verbose=True, width=None,
                            save_masks=False,
-                           rebuild=False,
-                           ncore=None):
+                           rebuild=False):
     
     """ Create Spaxel trace Solution 
     This enable to know which pixel belong to which spaxel
@@ -53,7 +70,6 @@ def build_tracematcher(date, verbose=True, width=None,
     Void.  (Creates the file TraceMatch.pkl and TraceMatch_WithMasks.pkl if save_masks)
     """
     
-    
     timedir = io.get_datapath(date)
         
     if verbose:
@@ -71,17 +87,22 @@ def build_tracematcher(date, verbose=True, width=None,
         
     if rebuild:
         print("Building Nightly Solution")
-        smap = get_tracematcher(glob(timedir+"dome.fits*")[0], width=width)
-        smap.writeto(timedir+"%s_TraceMatch.pkl"%date)
+        dome_fitsfile = glob(timedir+"dome.fits*")[0] # allows fits.gz
+        smap = get_tracematcher(dome_fitsfile, width=width)
+        fileout = io._get_tracematch_filepath(date, withmask=False)
+        smap.writeto(fileout, savemasks=False)
         print("Nightly Solution Saved")
         
     if save_masks:
-        if not rebuild and len(glob(timedir+"%s_TraceMatch_WithMasks.pkl"%date))>0:
+        fileout = io._get_tracematch_filepath(date, withmask=True)
+        if not rebuild and os.path.isfile(fileout):
             warnings.warn("TraceMatch_WithMasks already exists for %s. rebuild is False, so nothing is happening"%date)
             return
-        load_trace_masks(smap, smap.get_traces_within_polygon(INDEX_CCD_CONTOURS), ncore=ncore)
-        smap.writeto(timedir+"%s_TraceMatch_WithMasks.pkl"%date)
-    
+
+        trace_indexes = smap.get_traces_within_polygon(INDEX_CCD_CONTOURS)
+        load_trace_masks(smap, client=client, trace_indexes=trace_indexes)
+        smap.writeto(fileout)
+        
 ############################
 #                          #
 # Spaxel Spacial Position  #
@@ -89,63 +110,72 @@ def build_tracematcher(date, verbose=True, width=None,
 ############################
 def build_hexagonalgrid(date, xybounds=None, theta=None):
     """ """
-    smap  = io.load_nightly_tracematch(date)
-    # ----------------
-    # - Spaxel Selection
+    tracematch = io.load_nightly_tracematch(date, withmask=True)
     if xybounds is None:
-        xybounds=INDEX_CCD_CONTOURS
-    idxall = smap.get_traces_within_polygon(xybounds)
+        xybounds = INDEX_CCD_CONTOURS
 
-    hgrid = smap.extract_hexgrid(idxall, theta=theta)
-
-    timedir = io.get_datapath(date)
-    hgrid.writeto(timedir+"%s_HexaGrid.pkl"%date)
+    # = Build it
+    idxall = tracematch.get_traces_within_polygon(xybounds)
+    hexagrid = tracematch.extract_hexgrid(idxall, theta=theta)
+    
+    # = store it    
+    filepath = io._get_hexagrid_filepath(date)
+    hexagrid.writeto( filepath )
 
 ############################
 #                          #
 # Spaxel Spacial Position  #
 #                          #
 ############################
-def build_flatfield(date, lbda_min=7000, lbda_max=9000,
+def build_flatfield(date, client=None,
+                    lbda_min=7000, lbda_max=9000,
                     ref="dome", build_ref=True,
-                    kind="median", savefig=True, ncore=None):
+                    kind="median", savefig=True):
     """ """
     from ..sedm import get_sedmcube
     from pyifu.spectroscopy  import get_slice
 
-    reffile  = io.get_night_files(date, kind="cube.basic", target=ref)
+    reffile = io.get_night_files(date, kind="cube.basic", target=ref)
 
     # - If the reference if not there yet.
-    if len(reffile)==0:
-        warnings.warn("The reference cube %s does not exist "%ref)
+    if len(reffile)==0 or build_ref:
+        warnings.warn(f"The reference cube {ref} does not exist ")
         if build_ref:
             warnings.warn("build_flatfield is building it!")
         else:
             raise IOError("No reference cube to build the flatfield (build_ref was set to False)")
+
         # --------------------- #
         # Build the reference   #
         # --------------------- #
-        tmatch   = io.load_nightly_tracematch(date, withmask=True) 
-        # - The CCD
-        ccdreffile = io.get_night_files(date, kind="ccd.lamp", target=ref)[0]
-        ccdref     = get_ccd(ccdreffile, tracematch = tmatch, background = 0)
-        ccdref.fetch_background(set_it=True, build_if_needed=True, ncore=ncore)
+        # - load nightly solutions
+        wsol = io.load_nightly_wavesolution(date)
+        tracematch = io.load_nightly_tracematch(date, withmask=True)
+        hexagrid = io.load_nightly_hexagonalgrid(date)
+
+        # - get reference ccd source (dome)
+        ccd_reffile = io.get_night_files(date, kind="ccd.lamp", target=ref)
+        if len(ccd_reffile)==0:
+            raise IOError(f"not {ref} ccd available for {date}. Cannot get the flatfield.")
+        else:
+            ccd_reffile = ccd_reffile[0]
+
+        # - load the ccd and extract the cube           
+        ccdref = get_ccd(ccd_reffile, tracematch=tracematch, background=0)
+        ccdref.fetch_background(set_it=True, build_if_needed=True, client=client)
         if not ccdref.has_var():
             ccdref.set_default_variance()
-        # - HexaGrid
-        hgrid    = io.load_nightly_hexagonalgrid(date)
-        wcol     = io.load_nightly_wavesolution(date)
-        wcol._load_full_solutions_()
+
         # - Build a cube
-        build_sedmcube(ccdref, date, lbda=None, wavesolution=wcol, hexagrid=hgrid,
-                        flexure_corrected=False,
-                        flatfielded=False, build_calibrated_cube=False,atmcorrected=False)
+        refcube = ccdref.extract_cube(wsol, lbda=SEDM_LBDA, 
+                                    hexagrid=hexagrid,
+                                    pixel_shift=0)
+    else:
+        refcube  = get_sedmcube(reffile[0])
         
     # ---------------------- #
     #  Actual FlatFielding   #
     # ---------------------- #
-    reffile  = reffile  = io.get_night_files(date, kind="cube.basic", target=ref)[0]
-    refcube  = get_sedmcube(reffile)
     sliceref = refcube.get_slice(lbda_min=lbda_min, lbda_max=lbda_max, usemean=True)
     # - How to normalize the Flat
     if kind in ["med", "median"]:
@@ -158,22 +188,25 @@ def build_flatfield(date, lbda_min=7000, lbda_max=9000,
         raise ValueError("Unable to parse the given kind: %s"%kind)
     
     # - The Flat
-    flat     = sliceref / norm
+    lbda_eff = np.mean([lbda_min, lbda_max])
+    flat = sliceref / norm
     slice_ = get_slice(flat, np.asarray(refcube.index_to_xy(refcube.indexes)),
-                        refcube.spaxel_vertices,
-                        indexes=refcube.indexes, variance=None, lbda=None)
+                             refcube.spaxel_vertices,
+                             indexes=refcube.indexes, variance=None,
+                             lbda=lbda_eff)
     # - Figure
-    timedir  = io.get_datapath(date)
+    timedir = io.get_datapath(date)
+    
     # - Saving
     slice_.header["CALTYPE"] = "FlatField"
-    slice_.header["FLATSRC"]  = ref
-    slice_.header["FLATREF"]  = kind
-    slice_.writeto(timedir+'%s_Flat.fits'%date)
+    slice_.header["FLATSRC"] = ref
+    slice_.header["FLATREF"] = kind
+    slice_.to_fits( os.path.join(timedir, f'{date}_Flat.fits') )
     
     if savefig:
         print("Saving flat3d Figure")
-        slice_.show(savefile=timedir+"%s_flat3d.pdf"%date)
-        slice_.show(savefile=timedir+"%s_flat3d.png"%date)
+        slice_.show(savefile= os.path.join(timedir, f"{date}_flat3d.pdf") )
+        slice_.show(savefile= os.path.join(timedir, f"{date}_flat3d.png") )
 
     
 ############################
@@ -181,30 +214,51 @@ def build_flatfield(date, lbda_min=7000, lbda_max=9000,
 #   BackGround             #
 #                          #
 ############################
-def build_backgrounds(date, smoothing=[0,5], start=2, jump=10, 
-                        target=None, lamps=True, only_lamps=False, skip_calib=True,
-                        multiprocess=True, show_progress=False,
-                        savefig=True, ncore=None):
-    """ """
-    from ..background import build_background
+def build_backgrounds(date, client,
+                        target=None, lamps=False, only_lamps=False, skip_calib=True,
+                        savefig=True,  **kwargs):
+    """ 
+
+
+    kwargs goes to background.build_background => smoothing, start, jump
+
+    Returns
+    -------
+    None
+    """
+    import dask
+    from pysedm.background import build_background
     timedir  = io.get_datapath(date)
+    
     # - The files
     fileccds = []
+    if lamps or only_lamps:
+        crrfiles = io.get_night_files(date, "ccd.lamp")
+        fileccds += crrfiles
+        
     if not only_lamps:
         crrfiles  = io.get_night_files(date, "ccd.crr", target=target)
-        if skip_calib: fileccds = [f for f in crrfiles if "Calib" not in fits.getval(f,"Name")]            
+        if skip_calib:
+                fileccds = [f for f in crrfiles if "Calib" not in fits.getval(f,"Name")]
         fileccds += crrfiles
-
+        
     # - Building the background
-    tmap = io.load_nightly_tracematch(date)
+    tracematch = io.load_nightly_tracematch(date)
     nfiles = len(fileccds)
-    print("%d files to go..."%nfiles)
-    for i,file_ in enumerate(fileccds):
-        build_background(get_ccd(file_, tracematch=tmap, background=0),
-                        start=start, jump=jump, multiprocess=multiprocess, 
-                        smoothing=smoothing,show_progress=show_progress,
-                        savefile = None if not savefig else timedir+"bkgd_%s.pdf"%(file_.split('/')[-1].replace(".fits","")),
-                        ncore=ncore)
+    print(f"{nfiles} files to go...")
+
+    results = []
+    for file_ in fileccds:
+        # storing
+        basename = os.path.basename(file_).replace(".fits", "")
+        savefile = None if not savefig else os.path.join(timedir, f"bkgd_{basename}.pdf")
+        
+        # ccd_ => background | client at the top level.
+        ccd_ = dask.delayed(get_ccd)(file_, tracematch=tracematch, background=0)
+        background_ = dask.delayed(build_background)(ccd_, client=None, savefile=savefile, **kwargs)
+        results.append(background_)
+
+    return client.gather( client.compute(results) )
         
     
 ############################
@@ -212,11 +266,11 @@ def build_backgrounds(date, smoothing=[0,5], start=2, jump=10,
 #  Wavelength Solution     #
 #                          #
 ############################
-def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
-                       use_fine_tuned_traces=False,
-                       wavedegree=5, contdegree=3, show_progress=False,
-                       lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=False,
-                       xybounds=None, rebuild=True):
+def build_wavesolution(night, client,
+                       verbose=False, ntest=None, idxrange=None,
+                       wavedegree=5, contdegree=3, 
+                       lamps=["Hg","Cd","Xe"], savefig=True,
+                       xybounds=None, rebuild=False):
     """ Create the wavelength solution for the given night.
     The core of the solution fitting is made in pysedm.wavesolution.
 
@@ -227,90 +281,94 @@ def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
     -------
 
     """
-    timedir = io.get_datapath(date)
-        
-    if verbose:
-        print("Directory affected by Wavelength Calibration: %s"%timedir)
-
-
-    if not rebuild and len(glob(timedir+"%s_WaveSolution.pkl"%(date)))>0:
-        warnings.warn("WaveSolution already exists for %s. rebuild is False, so nothing is happening"%date)
+    # validated for version 0.40 #
+    
+    # = Checking if anything to do = #
+    outputfile = io._get_wavesolution_filepath(night)    
+    if os.path.isfile(outputfile) and not rebuild:
+        warnings.warn(f"WaveSolution already exists for {night}. rebuild is False. Nothing happens")
         return
-    
-    # ----------------
-    # - Load the Data
-    # - SpectralMatch using domes
-    #   Built by build_spectmatcher
-    smap = io.load_nightly_tracematch(date, withmask=True)
-        
-    if use_fine_tuned_traces:
-        raise ValueError("use_fine_tuned_traces is not supported anymore")
-    
-    fileccd_lamps = io.get_night_files(date, "ccd.lamp", target="|".join(lamps))
-    lamps = [get_ccd(f_, tracematch=smap, correct_traceflexure=True,
-                    savefile_traceflexure=None) # Don't save the figure here (called a lot when using derive_wavesolution)
-                 for f_ in fileccd_lamps]
-    
-    # - The CubeSolution
-    csolution = get_wavesolution(*lamps)
 
-    # ----------------
-    # - Spaxel Selection
+
+    # Yes ? ok, let's do it:
+    import dask
+    from .. import wavesolution
+
+    ## Parse input
+    ### Spaxel Selection
     if xybounds is None:
         xybounds = INDEX_CCD_CONTOURS
-        
-    idxall = smap.get_traces_within_polygon(xybounds)
+    
+
+    timedir = os.path.dirname(outputfile)
+    if verbose:
+        print(f"Directory affected by Wavelength Calibration: {timedir}")
+    
+    ## Grab indeed input
+    ### tracematch (where spaxels are)
+    tracematch = io.load_nightly_tracematch(night, withmask=True)
+    # => indexes of tracers (so spaxels) that should be considered
+    used_indexes = tracematch.get_traces_within_polygon(xybounds)
+    # => limit to what you need only (test purposes)
     if idxrange is not None:
-        idxall = [l for l in idxall if l>=idxrange[0] and l<idxrange[1]]
-    idx = idxall if ntest is None else np.random.choice(idxall,ntest, replace=False) 
+        used_indexes = [l for l in used_indexes if l>=idxrange[0] and l<idxrange[1]]
 
-    # - Do The loop and map it thanks to astropy
-    def fitsolution(idx_):
-        if saveindividuals:
-            saveplot = timedir+"%s_wavesolution_trace%d.pdf"%(date,idx_)
-        else:
-            saveplot = None
-        csolution.fit_wavelesolution(traceindex=idx_, saveplot=None,
-                    contdegree=contdegree, wavedegree=wavedegree, plotprop={"show_guesses":True})
-        if saveplot is not None:
-            csolution._wsol.show(show_guesses=True, savefile=saveplot)
-            mpl.close("all")
-
-    if show_progress:
-        from astropy.utils.console import ProgressBar
-        from ..utils import tools
-        notebook = tools.is_running_from_notebook()
-        bar = ProgressBar( len(index_columnidx), ipython_widget=notebook)
-    else:
-        bar = None
-
-    for j,i_ in enumerate(idx):
-        fitsolution(i_)
-        if bar is not None:
-            bar.update(j)
-    if bar is not None:
-        bar.update(len(idx))
-        
-    # - output - #
-    outfile = "%s_WaveSolution"%date
-    if idxrange is not None:
-        outfile += "_range_%d_%d"%(idxrange[0],idxrange[1])
     if ntest is not None:
-        outfile += "_ntest%d"%(ntest)
+        used_indexes = np.random.choice(used_indexes, ntest, replace=False) 
+
+
+    
+    ### loads the arclampcollection from which the individuals tracers are obtained.
+    arclamps = wavesolution.ArcLampCollection.from_night(night)
+
+    ## Perform the wavesolution computation
+    if verbose:
+        print(" Loading individual spaxel arc-spectra")
         
-    dump_pkl(csolution.wavesolutions, timedir+"%s.pkl"%outfile)
+    from tqdm import tqdm
+    spaxel_arcjson = [arclamps.get_trace_arccollection_json(i) for i in tqdm(used_indexes)]
+    
+    if verbose:
+        print("Getting delayed wavelength solution")
+
+    #                                #
+    # Perfom the Wavelength solution #
+    #                                #
+    ## step 1: creates the spaxels fit_wavelengthsolution (delayed)
+    wsolutions = []
+    for json in spaxel_arcjson: # loop over all spaxels
+        spaxel_arcs  = dask.delayed(wavesolution.ArcSpectrumCollection.from_json)(json)
+        wsolution = spaxel_arcs.fit_wavelengthsolution(wavesolution_degree=5, 
+                                                    inplace=False)
+        wsolutions.append(wsolution)
+
+    ## step 2: compute them and wait for it to be over.
+    spaxel_wavesolutions_f = client.compute(wsolutions)
+    spaxel_wavesolutions = client.gather(spaxel_wavesolutions_f, errors="skip")
+
+    ## step 3: once over check if a few failed and retry them.
+    ##         It happens with some network issues, more than 50 spaxels is unseen, so a bug not a glitch.
+    failed_spaxels = [f for f in spaxel_wavesolutions_f if f.status == "error"]
+    if len(failed_spaxels)<50: # try once more and then move on.
+        _ = client.retry(failed_spaxels)
+        spaxel_wavesolutions = client.gather(spaxel_wavesolutions_f, errors="skip")
+
+    ## step 4: grab those that worked (should be 100%)
+    worked_indexes = [i for i, f in zip(used_indexes, spaxel_wavesolutions_f) if f.status == "finished"]
+    if len(worked_indexes)<len(used_indexes):
+        warnings.warn(f"{len(used_indexes)-len(worked_indexes)} have failed.")
+
+    ## step 5: creates the wavesolution object:
+    wsol = wavesolution.WaveSolution.from_spaxel_wavesolutions(worked_indexes, spaxel_wavesolutions)
+    wsol.to_parquet(outputfile)
     
     if savefig:
-        if ntest is not None or idxrange is not None:
-            print("No WaveSolution saving plot when ntest or idxrange are set. ")
-        else:
-            print("Saving Wavesolution plot")
-            wsol = io.load_nightly_wavesolution(date)
-            hexagrid = io.load_nightly_hexagonalgrid(date)
-            pl = wsol.show_dispersion_map(hexagrid,vmin="0.5",vmax="99.5",
+        hexagrid = io.load_nightly_hexagonalgrid(night)
+        pl = wsol.show_dispersion_map(hexagrid, vmin="0.5",vmax="99.5",
                                               outlier_highlight=5, show=False)
-            pl['fig'].savefig(timedir+"%s_wavesolution_dispersionmap.pdf"%date)
-            pl['fig'].savefig(timedir+"%s_wavesolution_dispersionmap.png"%date)
+        
+        pl['fig'].savefig(os.path.join(timedir,f"{night}_wavesolution_dispersionmap.pdf") )
+        pl['fig'].savefig(os.path.join(timedir,f"{night}_wavesolution_dispersionmap.png") )
 
         
         
@@ -320,26 +378,29 @@ def build_wavesolution(date, verbose=False, ntest=None, idxrange=None,
 #  Build Cubes             #
 #                          #
 ############################
-def build_night_cubes(date, target=None, lamps=True, only_lamps=False,
-                          skip_calib=True, ncore=None, **kwargs):
+def build_night_cubes(date, client,
+                          target=None, lamps=False, only_lamps=False,
+                          skip_calib=True, **kwargs):
     """ 
     """
     fileccds = []
-    if lamps:
+    if lamps or only_lamps:
         fileccds += io.get_night_files(date, "ccd.lamp", target=target)
+        
     if not only_lamps:
         crrfiles  = io.get_night_files(date, "ccd.crr", target=target)
         if skip_calib: crrfiles = [f for f in crrfiles if "Calib" not in fits.getval(f,"Name")]            
         fileccds += crrfiles
 
     print("fileccds:", fileccds)
-    build_cubes(fileccds, date, ncore=ncore, **kwargs)
+    build_cubes(fileccds, date, client=client, **kwargs)
 
 
 # ----------------- #
 #  Build Cubes      #
 # ----------------- #
-def build_cubes(ccdfiles,  date, lbda=None,
+def build_cubes(ccdfiles, date, client,
+                lbda=None,
                 tracematch=None, wavesolution=None, hexagrid=None,
                 # Background:
                 nobackground = False,
@@ -353,10 +414,9 @@ def build_cubes(ccdfiles,  date, lbda=None,
                 # Out
                 build_guider=True, solve_wcs=False,
                 fileindex=None, show_progress=False,
-                savefig=True, verbose=True, 
-                ncore=None):
+                savefig=True, verbose=True):
     """ Build a cube from the an IFU ccd image. This image 
-    should be bias corrected and cosmic ray corrected.
+    should be bias and cosmic ray corrected.
 
     The standard created cube will be 3Dflat field correct 
     (see flatfielded) and corrected for atmosphere extinction 
@@ -426,18 +486,18 @@ def build_cubes(ccdfiles,  date, lbda=None,
     """
     if traceflexure_corrected:
         from ..flexure import get_ccd_jflexure
+        
     # ------------------ #
     # Loading the Inputs #
     # ------------------ #
     if tracematch is None:
-        tracematch   = io.load_nightly_tracematch(date, withmask=False if traceflexure_corrected else True) 
+        tracematch = io.load_nightly_tracematch(date, withmask=True) #False if traceflexure_corrected else True) 
         
     if hexagrid is None:
-        hexagrid     = io.load_nightly_hexagonalgrid(date)
+        hexagrid = io.load_nightly_hexagonalgrid(date)
     
     if wavesolution is None:
         wavesolution = io.load_nightly_wavesolution(date)
-        wavesolution._load_full_solutions_()
     
     if lbda is None:
         lbda = SEDM_LBDA
@@ -450,18 +510,17 @@ def build_cubes(ccdfiles,  date, lbda=None,
     # ---------------- #
     ccds = []
     for ccdfile in ccdfiles:
-        flexuresavefile = None if not savefig else [ccdfile.replace("crr","flexuretrace_crr").replace(".fits",".pdf"),
-                                                    ccdfile.replace("crr","flexuretrace_crr").replace(".fits",".png")]
-        ccd_    = get_ccd(ccdfile, tracematch = tracematch, background = 0,
+        flexuresavefile = None if not savefig else [ccdfile.replace("crr", "flexuretrace_crr").replace(".gz", "").replace(".fits",".pdf"),
+                                                    ccdfile.replace("crr", "flexuretrace_crr").replace(".gz", "").replace(".fits",".png")]
+        ccd_ = get_ccd(ccdfile, tracematch = tracematch, background = 0,
                               correct_traceflexure = traceflexure_corrected,
                               savefile_traceflexure=flexuresavefile)
         if traceflexure_corrected:
-            load_trace_masks(ccd_.tracematch,
-                                ccd_.tracematch.get_traces_within_polygon(INDEX_CCD_CONTOURS),
-                                ncore=ncore)
+            trace_indexes = ccd_.tracematch.get_traces_within_polygon(INDEX_CCD_CONTOURS)
+            load_trace_masks(ccd_.tracematch, client, trace_indexes=trace_indexes)
             
         if not nobackground:
-            ccd_.fetch_background(set_it=True, build_if_needed=True, ncore=ncore)
+            ccd_.fetch_background(set_it=True, build_if_needed=True, client=client)
             ccd_.header["CCDBKGD"] = (True, "is the ccd been background subtracted?")
         else:
             ccd_.header["CCDBKGD"] = (False, "is the ccd been background subtracted?")

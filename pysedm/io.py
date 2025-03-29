@@ -59,6 +59,29 @@ __all__ = ["get_night_files",
 #  Data Access             #
 #                          #
 ############################
+def download_night_calibration(date, dirout=None, **kwargs):
+    """ uses ztfquery to download the night calibration files.
+
+    Parameters
+    -----------
+    date: str
+        date with the format: YYYYMMDD
+
+    dirout: str, path
+        where data should be downloaded (-> dirout/YYYYMMDD/_downloaded_data_).
+        by default this will be `$ZTDATA/sedm/redux`.
+    
+    **kwargs goes to ztfquery.sedm.SEDMQuery.download_night_calibrations
+
+    Returns
+    -------
+    None
+    """
+    from ztfquery import sedm
+    squery = sedm.SEDMQuery()
+    _ = squery.download_night_calibrations(date, dirout=dirout, **kwargs)
+    return _
+
 def get_night_files(date, kind, target=None, extention=".fits"):
     """ GENERIC IO FUNCTION
     
@@ -126,7 +149,8 @@ def get_night_files(date, kind, target=None, extention=".fits"):
     return [path+f for f in os.listdir(get_datapath(date))
                if re.search(r'%s'%regex, f) and
                  (target is None or re.search(r'%s'%target, f)) and
-                 (extention is None or f.endswith(extention))]
+                 (extention is None or (f.endswith(extention) or f.endswith(extention+".gz")))
+                ]
 
 def get_cleaned_sedmcube(filename):
     """ get sky and flux calibrated cube """
@@ -263,7 +287,8 @@ def parse_filename(filename):
 def filename_to_background_name(filename):
     """ predefined structure for background naming """
     last = filename.split("/")[-1]
-    return "".join([filename.split(last)[0],"bkgd_"+last])
+    file_background = "".join([filename.split(last)[0],"bkgd_"+last])
+    return file_background
 
 def get_night_schedule(YYYYMMDD):
     """ Return the list of observations (the what.list) """
@@ -324,21 +349,34 @@ def load_nightly_mapper(YYYYMMDD, within_ccd_contours=True):
     return mapper
 
 # - TraceMatch
-def load_nightly_tracematch(YYYYMMDD, withmask=False):
+def _get_tracematch_filepath(night, withmask):
+    """ """
+    if withmask:
+        basename = f"{night}_TraceMatch_WithMasks.pkl"
+    else:
+        basename = f"{night}_TraceMatch.pkl"
+        
+    return os.path.join(get_datapath(night), basename)
+
+def load_nightly_tracematch(YYYYMMDD, withmask=True):
     """ Load the spectral matcher.
     This object must have been created. 
     """
     from .spectralmatching import load_tracematcher
-    if not withmask:
-        return load_tracematcher(get_datapath(YYYYMMDD)+"%s_TraceMatch.pkl"%(YYYYMMDD))
-    else:
-        try:
-            return load_tracematcher(get_datapath(YYYYMMDD)+"%s_TraceMatch_WithMasks.pkl"%(YYYYMMDD))
-        except:
-            warnings.warn("No TraceMatch_WithMasks found. returns the usual TraceMatch")
-            return load_nightly_tracematch(YYYYMMDD, withmask=False)
+    filepath = _get_tracematch_filepath( YYYYMMDD, withmask)
+    if withmask and not os.path.isfile(filepath):
+        warnings.warn("No TraceMatch_WithMasks found. returns the usual TraceMatch")
+        filepath = _get_tracematch_filepath( YYYYMMDD, False)
+    
+    
+    return load_tracematcher( filepath )
+    
 
 # - HexaGrid
+def _get_hexagrid_filepath(night):
+    """ """
+    return os.path.join(get_datapath(night),f"{night}_HexaGrid.pkl" )
+
 def load_nightly_hexagonalgrid(YYYYMMDD, download_it=True,
                                    nprocess_dl=1, **kwargs):
     """ Load the Grid id <-> QR<->XY position
@@ -350,7 +388,7 @@ def load_nightly_hexagonalgrid(YYYYMMDD, download_it=True,
 
     """
     from .utils.hexagrid import load_hexprojection
-    hexagrid_path = os.path.join(get_datapath(YYYYMMDD),"%s_HexaGrid.pkl"%(YYYYMMDD) )
+    hexagrid_path = _get_hexagrid_filepath(YYYYMMDD)
     if os.path.isfile(hexagrid_path):
         return load_hexprojection( hexagrid_path )
 
@@ -369,14 +407,17 @@ def load_nightly_hexagonalgrid(YYYYMMDD, download_it=True,
     raise IOError(f"Cannot find an hexagrid for date {YYYYMMDD}, even after calling squery.download_night_calibrations()")
         
 # - WaveSolution
-def load_nightly_wavesolution(YYYYMMDD, subprocesses=False):
+def _get_wavesolution_filepath(YYYYMMDD, format="parquet"):
+    """ stored filepath for the wavelength solution """
+    return os.path.join(get_datapath(YYYYMMDD), f"{YYYYMMDD}_WaveSolution.{format}")
+
+    
+def load_nightly_wavesolution(YYYYMMDD):
     """ Load the spectral matcher.
     This object must have been created. 
     """
-    from .wavesolution import load_wavesolution
-    if not subprocesses:
-        return load_wavesolution(get_datapath(YYYYMMDD)+"%s_WaveSolution.pkl"%(YYYYMMDD))
-    return [load_wavesolution(subwave) for subwave in glob(get_datapath(YYYYMMDD)+"%s_WaveSolution_range*.pkl"%(YYYYMMDD))]
+    from .wavesolution import WaveSolution
+    return WaveSolution.from_night(YYYYMMDD)
 
 # - 3D Flat
 def load_nightly_flat(YYYYMMDD):

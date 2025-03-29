@@ -124,8 +124,8 @@ def build_wcs(radec, spxy, rotation=2, scale=0.55):
     rot = np.asarray([[np.cos(theta), np.sin(theta)],
                      [-np.sin(theta), np.cos(theta)]])
     scaling = scale * np.asarray([-1/np.cos(radec[1]*np.pi/180), 1])
+    
     offset_radec = np.dot(rot, np.asarray(spxy)/3600)
-
     ra0, dec0 = radec - scaling*offset_radec
 
     return {"CTYPE1": 'RA---TAN',
@@ -134,6 +134,7 @@ def build_wcs(radec, spxy, rotation=2, scale=0.55):
             "CRPIX1": 1, "CRPIX2": 1,
             "CDELT1": -scale/3600,
             "CDELT2": scale/3600}
+
 # ======================= #
 #   High Level            #
 # ======================= #
@@ -250,7 +251,7 @@ def get_ccd_pos(filename, radec=None, verbose=True):
     if len(astrom_file) == 0:
         if verbose:
             print("No astrom file found for %s" % filename)
-        return [np.NaN, np.NaN]
+        return [np.nan, np.nan]
 
     astrom_file = astrom_file[0]
     with fits.open(filename) as f:
@@ -405,12 +406,17 @@ class Astrometry():
         self.date = date
         scale = 0.55
         rotation = 1
-        position = np.NaN, np.NaN
+        position = np.nan, np.nan
 
+        #if Time(date) >= Time("2024-10-12"): # TO BE CHECKED
+        #    position = 1050.5, 968.5
+        #    scale = 0.55
+        #    rotation = 1
         if Time(date) >= Time("2020-10-04"):
             position = 1039.5, 968.5
             scale = 0.55
             rotation = 1
+            
         elif Time(date) >= Time("2020-10-03"):
             position = 1019.0, 945.0
             scale = 0.55
@@ -1049,7 +1055,7 @@ class SliceAligner():
 
         data = self.grid.geodataframe["data"].values.copy()
         # set nans to things outside the slice
-        data[~flagin] = np.NaN
+        data[~flagin] = np.nan
         # Normalize everything
         data = (data - np.percentile(data[data == data], 1)) / (np.percentile(
             data[data == data], 99) - np.percentile(data[data == data], 1))

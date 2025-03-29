@@ -60,9 +60,7 @@ def load_tracematcher(tracematchfile):
     -------
     SpectralMatch
     """
-    smap = TraceMatch()
-    smap.load(tracematchfile)
-    return smap
+    return TraceMatch.from_filepath(tracematchfile)
 
 def get_tracematcher(domefile, build_tracemask=False, width=None, **kwargs):
     """ build the spectral match object on the domefile data. 
@@ -239,34 +237,23 @@ def verts_to_mask(verts):
     return maskfull.T
     
 
-def load_trace_masks(tmatch, trace_indexes=None, multiprocess=True,
-                         ncore=None, show_progress=False):
+def load_trace_masks(tmatch, client, trace_indexes=None):
     """ """
+    import dask
     if trace_indexes is None:
         trace_indexes = tmatch.trace_indexes
-    
-    if multiprocess:
-        import multiprocessing
-        if show_progress:
-            notebook = tools.is_running_from_notebook()
-            bar = ProgressBar( len(trace_indexes), ipython_widget=notebook)
-        else:
-            bar = None
-            
-        if ncore is None:
-            ncore = np.max([multiprocessing.cpu_count() - 1, 1])
-        
-        p = multiprocessing.Pool(ncore)
-        for j, mask in enumerate( p.imap(verts_to_mask, [tmatch.trace_vertices[i_]
-                                                             for i_ in trace_indexes])):
-            tmatch.set_trace_masks(sparse.csr_matrix(mask), trace_indexes[j])
-            if bar is not None:
-                bar.update(j)
-        if bar is not None:
-            bar.update( len(trace_indexes) )
-        
-    else:
-        raise NotImplementedError("Use multiprocess = True (load_trace_masks)")
+
+    sparse_masks = []
+    for index_ in trace_indexes:
+        verts = tmatch.trace_vertices[index_]
+        mask = dask.delayed(verts_to_mask)(verts)
+        mask_sparse = dask.delayed(sparse.csr_matrix)(mask)
+        sparse_masks.append(mask_sparse)
+
+    sparse_masks = client.gather( client.compute(sparse_masks) ) # compute them
+    tmatch.set_trace_masks(sparse_masks, trace_indexes) # set them in    
+    return tmatch
+
 
 #####################################
 #                                   #
@@ -280,12 +267,26 @@ class TraceMatch( BaseObject ):
     traceindex = ID of the trace (as in _tracecolor and trace_vertices)
     
     """
-    PROPERTIES         = ["trace_linestring","trace_vertices","subpixelization", "trace_indexes", "width"]
+    PROPERTIES         = ["trace_linestring","trace_vertices","subpixelization",
+                              "trace_indexes", "width"]
     SIDE_PROPERTIES    = ["trace_masks","ij_offset", ]
     DERIVED_PROPERTIES = ["tracecolor", "facecolor", "maskimage",
                           "rmap", "gmap", "bmap",
                           "trace_polygons"]
 
+    @classmethod
+    def from_night(cls, night):
+        """ """
+        from .io import _get_tracematch_filepath
+        tracematchfile = _get_tracematch_filepath(night)
+        return cls.from_filepath(tracematchfile)
+    
+    @classmethod
+    def from_filepath(cls, filename):
+        this = cls()
+        this.load( filename )
+        return this
+        
     # ===================== #
     #   Main Methods        #
     # ===================== #
@@ -454,7 +455,7 @@ class TraceMatch( BaseObject ):
         mpoly = geometry.MultiPolygon([self.trace_polygons[i_]
                             for i_ in self.get_traces_crossing_x(xpixel, ymin=ymin, ymax=ymax) ])
         
-        return np.asarray([m.intersection(line).xy[1]for m in mpoly])
+        return np.asarray([m.intersection(line).xy[1] for m in mpoly.geoms])
             
         
     def get_traces_crossing_y(self, ypixel, xmin=-1, xmax=1e5):

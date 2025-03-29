@@ -13,9 +13,7 @@ __all__ = ["get_hexprojection"]
 
 def load_hexprojection(hexfile):
     """ """
-    hex_ = HexagoneProjection(None, empty=True)
-    hex_.load(hexfile)
-    return hex_
+    return HexagoneProjection.from_filepath(hexfile)
 
 def get_hexprojection(xy, ids=None, qdistance=None,
                       reference_ids=None, build=True, theta=None, **kwargs):
@@ -52,6 +50,20 @@ class HexagoneProjection( BaseObject ):
         if load:
             self.fetch_neighbors()
 
+    @classmethod
+    def from_night(cls, night):
+        """ shortcut to load the wavesolution of a given night (YYYYMMMDD) """
+        from ..io import _get_hexagrid_filepath
+        filepath = _get_hexagrid_filepath(night)
+        return cls.from_filepath(filepath)
+
+    @classmethod
+    def from_filepath(cls, filepath):
+        """ load instance from file """
+        this = cls(None, empty=True)
+        this.load( filepath )
+        return this
+        
     # -------------- #
     #   I/O          #
     # -------------- #
@@ -243,9 +255,9 @@ class HexagoneProjection( BaseObject ):
         qr = np.asarray(self.index_to_qr(index)).T
 
         if not is_arraylike(index):
-            q,r = qr if qr is not None else [np.NaN, np.NaN]
+            q,r = qr if qr is not None else [np.nan, np.nan]
         else:
-            q,r = np.asarray([qr_ if qr_ is not None else [np.NaN, np.NaN]
+            q,r = np.asarray([qr_ if qr_ is not None else [np.nan, np.nan]
                                   for qr_ in qr]).T
             
         return self.qr_to_xy(q,r, invert_rotation=invert_rotation,

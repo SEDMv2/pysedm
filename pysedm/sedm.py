@@ -315,10 +315,9 @@ def build_sedmcube(ccd, date, lbda=None, flatfield=None,
         fileout_ = "%s_%s"%(ccd.filename.split("/")[-1].split(".fits")[0], ccd.objname)
 
 
-    fileindex = "_%s"%fileindex if fileindex is not None and fileindex.replace(" ","") != "" else ""
+    fileindex = f"_{fileindex}" if fileindex is not None and fileindex.replace(" ","") != "" else ""
 
-    fileout     = io.get_datapath(date)+"%s%s_%s.fits"%(io.PROD_CUBEROOT,fileindex,fileout_)
-
+    fileout = io.get_datapath(date)+f"{io.PROD_CUBEROOT}{fileindex}_{fileout_}.fits"
 
 
     # - INPUT [optional]
@@ -327,7 +326,6 @@ def build_sedmcube(ccd, date, lbda=None, flatfield=None,
 
     if wavesolution is None:
         wavesolution = io.load_nightly_wavesolution(date)
-        wavesolution._load_full_solutions_()
 
     if lbda is None:
         lbda = SEDM_LBDA
@@ -668,7 +666,7 @@ def display_on_hexagrid(value, traceindexes,
         raise ValueError("value and traceindexes do not have the same size (%d vs. %s)"%(len(value),len(traceindexes)))
     else:
         nspaxes = len(value)
-        value        = np.asarray(value)
+        value = np.asarray(value)
 
     traceindexes = np.asarray(traceindexes)
 
@@ -682,20 +680,20 @@ def display_on_hexagrid(value, traceindexes,
 
     # - which colors
     if vmin is None:
-        vmin = np.percentile(value,0)
+        vmin = np.percentile(value, 0)
     elif type(vmin) == str:
-        vmin = np.percentile(value,float(vmin))
+        vmin = np.percentile(value, float(vmin))
     if vmax is None:
-        vmax = np.percentile(value,100)
+        vmax = np.percentile(value, 100)
     elif type(vmax) == str:
-        vmax = np.percentile(value,float(vmax))
+        vmax = np.percentile(value, float(vmax))
 
     colors = mpl.cm.viridis((value-vmin)/(vmax-vmin))
     # - where
     if xy is None:
         hexagrid.set_rot_degree(SEDM_ROT)
         x,y = np.asarray(hexagrid.index_to_xy(hexagrid.ids_to_index(traceindexes),
-                                            invert_rotation=False,
+                                            invert_rotation=True,
                                             switch_axis=SEDM_INVERT))
     else:
         x,y = xy
@@ -845,7 +843,7 @@ class SEDMExtractStar( BaseObject ):
 
     def build_backup_output(self):
         """ """
-        backup_spec = get_spectrum( SEDM_LBDA, np.ones(len(SEDM_LBDA))*np.NaN,
+        backup_spec = get_spectrum( SEDM_LBDA, np.ones(len(SEDM_LBDA))*np.nan,
                                         header=self.cube.header )
         self.set_es_products(backup_spec, None, None, None, None, None, backup=True)
 
@@ -1107,6 +1105,7 @@ class SEDMExtractStar( BaseObject ):
 
         if update:
             self.set_fitted_spaxels(pysedm_spaxels_tofit)
+            
         return pysedm_spaxels_tofit
 
     def get_centroid(self, centroid=None, centroiderr=None, **kwargs):
@@ -1814,7 +1813,7 @@ class SEDMCube( Cube ):
         byecrcl = byecr.SEDM_BYECR(night, self)
         cr_df = byecrcl.get_cr_spaxel_info(cut_criteria=cut_criteria)
         
-        # and NaN their flux.
+        # and nan their flux.
         newdata = self.data.copy()
         newdata[cr_df["cr_lbda_index"], cr_df["cr_spaxel_index"]] = np.nan
         # Update the header...

@@ -30,8 +30,14 @@ if  __name__ == "__main__":
     parser.add_argument('--solvewcs',  action="store_true", default=False,
                         help='Shall the wcs solution of the guider be solved (ignored if --noguider). [part of the --build]')
 
+    # --------------- #
+    #  Distribution   #
+    # --------------- #
     parser.add_argument('--ncore',  type=int, default=None,
-                        help='Number of cores to use for multiprocessing. ncore=1 means no multiprocessing.')
+                        help='Number of cores to use for multiprocessing or dask. ncore=1 means no multiprocessing.')
+    
+    parser.add_argument('--nthread',  type=int, default=2,
+                        help='Number of thread per core (dask).')
 
     # --------------- #
     #  Cube Building  #
@@ -120,6 +126,12 @@ if  __name__ == "__main__":
     # --------- #
     date = args.infile
 
+    # ----------- #
+    # Dask Client #
+    # ----------- #
+    from dask.distributed import Client
+    client = Client(threads_per_worker=args.nthread, n_workers=args.ncore)
+    
     # ------------ #
     # Short Cuts   #
     # ------------ #
@@ -146,7 +158,8 @@ if  __name__ == "__main__":
         
     if args.build is not None and len(args.build) >0:
         for target in args.build.split(","):
-            build_night_cubes(date, target=target,
+            build_night_cubes(date, client=client,
+                             target=target,
                              lamps=True, only_lamps=False, skip_calib=True,
                              fileindex=fileindex,
                              nobackground=bool(args.nobackground),
@@ -155,8 +168,7 @@ if  __name__ == "__main__":
                              solve_wcs = args.solvewcs,
                              savefig = False if args.nofig else True,
                              flexure_corrected = False if args.noflexure else True,
-                             traceflexure_corrected = False if args.notraceflexure else True,
-                             ncore=args.ncore)
+                             traceflexure_corrected = False if args.notraceflexure else True)
             
     if args.buildcal is not None:
         if args.buildcal=="*": args.buildcal=args.build
@@ -169,19 +181,18 @@ if  __name__ == "__main__":
     # - Background
     if args.buildbkgd is not None and len(args.buildbkgd) > 0:
         for target in args.buildbkgd.split(","):
-            build_backgrounds(date, target=target,
-                                  show_progress=True,
-                                  multiprocess=False, # Force no multiprocessing here
-                                  lamps=True, only_lamps=True, skip_calib=True, 
-                                  ncore=args.ncore)
+            build_backgrounds(date, client=client,
+                                  target=target,
+                                  lamps=True, only_lamps=True, skip_calib=True)
             
-    # -----------
-    # 
-    # ----------- 
+    # ---------------- #
+    #  Night solutuon  #
+    # ---------------- #
     # - TraceMatch
     if args.tracematch or args.tracematchnomasks:
-        build_tracematcher(date, save_masks= True if not args.tracematchnomasks else False,
-                           rebuild=args.rebuild, ncore=args.ncore)
+        build_tracematcher(date, client=client,
+                           save_masks= True if not args.tracematchnomasks else False,
+                           rebuild=args.rebuild)
         
     # - Hexagonal Grid        
     if args.hexagrid:
@@ -192,27 +203,30 @@ if  __name__ == "__main__":
         ntest = None if "None" in args.wavesoltest else int(args.wavesoltest)
         spaxelrange = None if "None" in args.spaxelrange else np.asarray(args.spaxelrange.split(","), dtype="int")
 
-        build_wavesolution(date, ntest=ntest, use_fine_tuned_traces=False,
-                            idxrange=spaxelrange,
-                            lamps=["Hg","Cd","Xe"], saveindividuals=args.wavesolplots,
+        build_wavesolution(date, client,
+                            ntest=ntest, idxrange=spaxelrange,
+                            lamps=["Hg","Cd","Xe"],
                             savefig = False if args.nofig else True,
                             rebuild=args.rebuild)
+        
 
     # - Flat Fielding
     if args.flat:
         lbda_min,lbda_max = np.asarray(args.flatlbda.split(","), dtype="float")
-        build_flatfield(date,
+        build_flatfield(date, client=client,
                         lbda_min=lbda_min,
                         lbda_max=lbda_max,
                         ref=args.flatref, build_ref=True,
-                        savefig=~args.nofig, ncore=args.ncore)
+                        savefig=~args.nofig)
+        
         # Now calc stats
         from pysedm import ccd
         from pysedm.io import get_datapath
         import numpy as np
-        dome = ccd.get_dome("dome.fits", background=0, load_sep=True)
+        dome_file = os.path.join(get_datapath(date), "dome.fits")
+        dome = ccd.get_dome(dome_file, background=0, load_sep=True)
         a, b = dome.sepobjects.get(["a", "b"]).T
-        savefile = get_datapath(date) + "%s_dome_stats.txt" % date
+        savefile = os.path.join(get_datapath(date), f"{date}_dome_stats.txt")
         stat_f = open(savefile, "w")
         stat_f.write("NSpax: %d\n" % len(b))
         stat_f.write("MinWid: %.3f\n" % min(b))
@@ -226,3 +240,10 @@ if  __name__ == "__main__":
         stat_f.close()
         print("nspax, min, avg, med, max Wid: %d, %.3f, %.3f, %.3f, %.3f" %
               (len(b), min(b), np.nanmean(b), np.nanmedian(b), max(b)))
+
+
+    # ============= #
+    #   Finishing   #
+    # ============= #
+    client.close()
+    
