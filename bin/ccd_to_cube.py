@@ -8,6 +8,7 @@ from glob import glob
 #
 #################################
 if  __name__ == "__main__":
+    __spec__ = None
     
     import argparse
     from pysedm.script.ccd_to_cube import *
