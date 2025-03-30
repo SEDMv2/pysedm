@@ -645,6 +645,7 @@ class WaveSolution( BaseObject ):
     def to_parquet(self, filename):
         """ """
         df = self.to_dataframe()
+        df.columns = df.columns.astype(str)
         return df.to_parquet(filename)
     
     def writeto(self, filename):
