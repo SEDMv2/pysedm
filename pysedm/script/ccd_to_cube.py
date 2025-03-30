@@ -269,7 +269,7 @@ def build_backgrounds(date, client,
 
 def build_wavesolution(night, client, verbose=False, ntest=None, idxrange=None,
                        wavedegree=5, contdegree=1, show_progress=False,
-                       lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=False,
+                       lamps=["Hg","Cd","Xe"], savefig=True, saveindividuals=True,
                        xybounds=None, rebuild=True):
     """ Create the wavelength solution for the given night.
     The core of the solution fitting is made in pysedm.wavesolution.
@@ -338,10 +338,13 @@ def build_wavesolution(night, client, verbose=False, ntest=None, idxrange=None,
     #                                #
     ## step 1: creates the spaxels fit_wavelengthsolution (delayed)
     wsolutions = []
-    for json in spaxel_arcjson: # loop over all spaxels
+    for i,json in enumerate(spaxel_arcjson): # loop over all spaxels
         spaxel_arcs  = dask.delayed(wavesolution.ArcSpectrumCollection.from_json)(json)
         wsolution = spaxel_arcs.fit_wavelengthsolution(wavesolution_degree=5, 
                                                     inplace=False)
+        if saveindividuals:
+            saveplot = timedir + "%s_wavesolution_trace%d.pdf" % (night,used_indexes[i])
+            wsolution.show(savefile=saveplot)
         wsolutions.append(wsolution)
 
     ## step 2: compute them and wait for it to be over.
