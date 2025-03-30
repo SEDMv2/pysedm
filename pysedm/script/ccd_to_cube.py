@@ -344,7 +344,7 @@ def build_wavesolution(night, client, verbose=False, ntest=None, idxrange=None,
                                                     inplace=False)
         if saveindividuals:
             saveplot = timedir + "%s_wavesolution_trace%d.pdf" % (night,used_indexes[i])
-            wsolution.show(savefile=saveplot)
+            wsolution.show(savefile=saveplot,show=False)
         wsolutions.append(wsolution)
 
     ## step 2: compute them and wait for it to be over.
