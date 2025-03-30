@@ -1264,7 +1264,7 @@ class VirtualArcSpectrum( BaseObject ):
         self._normguesses = {}
 
         if lines_shift is None:
-            lines_shift = self.get_line_shift()
+            lines_shift = self.get_lines_shift()
 
         if self.arcname == "Hg":
             Hg_lines_shift = self.custom_Hg_line_shift()
