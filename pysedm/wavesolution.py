@@ -999,8 +999,11 @@ class SpaxelWaveSolution( BaseObject ):
             xrange = [self.datafitted["usedlines"].min()-100, self.datafitted["usedlines"].max()+100]
         x = np.linspace(xrange[0],xrange[1], 1000)
         ml = ax.plot(x, self.lbda_to_pixels(x), lw=2, color="C1")
-        
-        fig.figout(savefile=savefile, show=show)
+        if savefile is not None:
+            fig.savefig(savefile)
+        if show:
+            fig.show()
+        # fig.figout(savefile=savefile, show=show)
         
     # ================== #
     #   Properties       #
