@@ -24,8 +24,10 @@ CALIBFILES = ["Hg.fits","Cd.fits","Xe.fits","dome.fits"]
 
 if os.getenv("WHICHSEDM",default='P60')=='P60':
     from .sedmvariables import *
+    observatory = "Palomar"
 elif os.getenv("WHICHSEDM",default='P60')=='KP84':
     from .sedmkpvariables import *
+    observatory = "Kitt Peak"
 
 # # --- CCD
 # SEDM_CCD_SIZE = [2048, 2048]
@@ -2131,7 +2133,7 @@ class SEDMCube( Cube ):
         from astropy.time import Time
         from astropy.coordinates import SkyCoord
         import astropy.units as u
-        obs = Observer.at_site('Kitt Peak')
+        obs = Observer.at_site(observatory)
         telpa = obs.parallactic_angle(time=Time(self.header['DATE'],format='isot'),
                                    target=SkyCoord(ra=self.header['RAD'],dec=self.header['DECD'],unit=(u.deg)))
         adr_prop = {**dict(pressure=pressure,
